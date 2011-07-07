@@ -1,0 +1,13 @@
+Ges is a personal accounting software.
+
+It is limited to personal account operations management. It does not provide assets nor stock management, neither loan. I developed for personal need and leisure, as a way to discover MacOS X development (Cocoa and Objective-C). However, I also used it during a long time since no commercial software was filling some of my special needs, in particular being able to associate a person to an operation.
+
+I started developing this while I was in High School, I had learnt software development on my own, and even if I progressively made changes to the fundation, it is still in many ways a dirty example of coding!
+
+However, it can provide someone wanting to build personal finance software some opensource ground on which to start.
+
+There may be some credits necessary, you should find them directly in the source code.
+
+Except for the code I did not write and for which you will find the adequate mentions (I hope), this code is provided AS IS, with NO WARRANTY, but you can do everything you want with it, it's under MIT License.
+
+Do not hesitate to fork and give me feedback, you can even ask if you need some help with it!

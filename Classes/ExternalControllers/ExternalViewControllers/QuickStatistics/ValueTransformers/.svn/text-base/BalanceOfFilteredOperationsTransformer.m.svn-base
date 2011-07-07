@@ -1,0 +1,52 @@
+//
+//  BalanceOfFilteredOperationsTransformer.m
+//  Ges
+//
+//  Created by NeoJF on 23/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import "BalanceOfFilteredOperationsTransformer.h"
+
+
+/**
+ * BalanceOfFilteredOperationsTransformer
+ *
+ * Used to display the balance of each type in the Quick Statistics view.
+ * The transformer is provided the 'operations' property of the type, apply
+ * the 'filterPredicate' of the filter controller on it, and then calculates
+ * the balance of the resulting operations.
+ */
+@implementation BalanceOfFilteredOperationsTransformer
+
+/**
+ * Returns the balance of provided operations - value if a set of operations -
+ * after having filtered them.
+ */
+- (id)transformedValue:(id)value {
+	if ([value count] == 0) {
+		return [NSNumber numberWithInt:0];
+	}
+	else {
+		FilterController* filterController = [((MyDocument*)[[NSDocumentController sharedDocumentController] currentDocument]) filterController];
+		NSArray* operations = [((NSSet*)value) allObjects];
+		NSArray* filteredOperations = [operations filteredArrayUsingPredicate:[filterController statisticsFilterPredicate]];
+		return [filteredOperations valueForKeyPath:@"@sum.value"];
+	}
+}
+
+/**
+ * Returns 'NO'. Indicates the transformation cannot be reversed.
+ */
++ (BOOL)allowsReverseTransformation {
+	return NO;
+}
+
+/**
+ * Returns the 'NSNumber' class.
+ */
++ (Class)transformedValueClass {
+	return [NSNumber class];
+}
+
+@end

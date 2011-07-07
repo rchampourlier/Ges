@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<!DOCTYPE database SYSTEM "file:///System/Library/DTDs/CoreData.dtd">
+
+<database>
+    <databaseInfo>
+        <version>134481920</version>
+        <UUID>E222A133-7920-47AE-91EA-302B3691C5B7</UUID>
+        <nextObjectID>114</nextObjectID>
+        <metadata>
+            <plist version="1.0">
+                <dict>
+                    <key>NSPersistenceFrameworkVersion</key>
+                    <integer>251</integer>
+                    <key>NSStoreModelVersionHashes</key>
+                    <dict>
+                        <key>Account</key>
+                        <data>
+		bnBlxK2P/I7S8cBrmwC+mldl8ih428kCT+/gVZjgONw=
+		</data>
+                        <key>AccountGroup</key>
+                        <data>
+		FXC94oihLBGn8vNtiNIVBMYAX0XT7F4ue9ym8sO3+Y0=
+		</data>
+                        <key>Event</key>
+                        <data>
+		VxD5pPAVlnoRdyycEkJlbl2PNC/lEwbXjpFR7oUQ1Hw=
+		</data>
+                        <key>Filter</key>
+                        <data>
+		fn7jrf0UJ6+GTStDHUeSsEUKIafmLaccBpPcJ5N/XgU=
+		</data>
+                        <key>Mode</key>
+                        <data>
+		gvE+stPOo2g92meXUB48yIP01b8LAzGiODBXOcyg/hM=
+		</data>
+                        <key>Operation</key>
+                        <data>
+		W63i1/WJvSO+QaNYJlp+gWvO95i/DsPEn+EvhOAZR5w=
+		</data>
+                        <key>Person</key>
+                        <data>
+		qYJsE9QScjrkTF+Cmzm+I7cxW3hqr/s9PX8sZjZ0PKQ=
+		</data>
+                        <key>Post</key>
+                        <data>
+		kn4CFetltVMNFq/fk851h/RYkXJKVnUhw2YN9a3xAt4=
+		</data>
+                        <key>Repetition</key>
+                        <data>
+		DszGFXIJNn9Cwj1UPereK0IY4GLPrCg+rYPn1309sdo=
+		</data>
+                        <key>Type</key>
+                        <data>
+		Bzk+aqUtZxsq4PoiLQvj5dFkM27HZlNfrNA2AFRhpgY=
+		</data>
+                        <key>TypesSet</key>
+                        <data>
+		ehdx1OU6OxXitsT94s9wJsNhBpdoLwhx6hvQRSBfxTM=
+		</data>
+                    </dict>
+                    <key>NSStoreModelVersionHashesVersion</key>
+                    <integer>3</integer>
+                    <key>NSStoreModelVersionIdentifiers</key>
+                    <array>
+                        <string>081</string>
+                    </array>
+                </dict>
+            </plist>
+        </metadata>
+    </databaseInfo>
+    <object type="PERSON" id="z102">
+        <attribute name="priority" type="int16">1</attribute>
+        <attribute name="name" type="string">Demo person 1</attribute>
+        <relationship name="accounts" type="0/0" destination="ACCOUNT"></relationship>
+        <relationship name="filters" type="0/0" destination="FILTER" idrefs="z110"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION"></relationship>
+    </object>
+    <object type="TYPE" id="z103">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Demo type 1 of post 2</attribute>
+        <attribute name="includedinstatisticstotal" type="bool">1</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <relationship name="post" type="1/1" destination="POST" idrefs="z106"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION"></relationship>
+        <relationship name="sets" type="0/0" destination="TYPESSET"></relationship>
+    </object>
+    <object type="MODE" id="z104">
+        <attribute name="priority" type="int16">1</attribute>
+        <attribute name="name" type="string">Demo mode 1</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <attribute name="allowsvaluedate" type="bool">0</attribute>
+        <relationship name="availableforaccounts" type="0/0" destination="ACCOUNT" idrefs="z114 z111"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION"></relationship>
+    </object>
+    <object type="MODE" id="z105">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Demo mode 2</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <attribute name="allowsvaluedate" type="bool">1</attribute>
+        <relationship name="availableforaccounts" type="0/0" destination="ACCOUNT" idrefs="z114"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION" idrefs="z107"></relationship>
+    </object>
+    <object type="POST" id="z106">
+        <attribute name="priority" type="int16">1</attribute>
+        <attribute name="name" type="string">Demo post 2</attribute>
+        <attribute name="includedinstatisticstotal" type="bool">1</attribute>
+        <attribute name="filterstate" type="int16">1</attribute>
+        <relationship name="operations" type="0/0" destination="OPERATION"></relationship>
+        <relationship name="types" type="0/0" destination="TYPE" idrefs="z113 z103"></relationship>
+    </object>
+    <object type="OPERATION" id="z107">
+        <attribute name="valuedate" type="date">331725600.00000000000000000000</attribute>
+        <attribute name="value" type="decimal">10</attribute>
+        <attribute name="pointedstate" type="int16">1</attribute>
+        <attribute name="operationdescription" type="string">Demo operation 1</attribute>
+        <attribute name="operationdate" type="date">331725600.00000000000000000000</attribute>
+        <attribute name="markedstate" type="int16">0</attribute>
+        <relationship name="account" type="1/1" destination="ACCOUNT" idrefs="z114"></relationship>
+        <relationship name="mode" type="1/1" destination="MODE" idrefs="z105"></relationship>
+        <relationship name="person" type="1/1" destination="PERSON" idrefs="z108"></relationship>
+        <relationship name="post" type="1/1" destination="POST" idrefs="z109"></relationship>
+        <relationship name="repetition" type="1/1" destination="REPETITION"></relationship>
+        <relationship name="splitparent" type="1/1" destination="OPERATION"></relationship>
+        <relationship name="transferdualoperation" type="1/1" destination="OPERATION"></relationship>
+        <relationship name="type" type="1/1" destination="TYPE" idrefs="z112"></relationship>
+        <relationship name="events" type="0/0" destination="EVENT"></relationship>
+        <relationship name="splitchildren" type="0/0" destination="OPERATION"></relationship>
+    </object>
+    <object type="PERSON" id="z108">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Demo person 2</attribute>
+        <relationship name="accounts" type="0/0" destination="ACCOUNT"></relationship>
+        <relationship name="filters" type="0/0" destination="FILTER" idrefs="z110"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION" idrefs="z107"></relationship>
+    </object>
+    <object type="POST" id="z109">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Demo post 1</attribute>
+        <attribute name="includedinstatisticstotal" type="bool">1</attribute>
+        <attribute name="filterstate" type="int16">1</attribute>
+        <relationship name="operations" type="0/0" destination="OPERATION" idrefs="z107"></relationship>
+        <relationship name="types" type="0/0" destination="TYPE" idrefs="z112"></relationship>
+    </object>
+    <object type="FILTER" id="z110">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Filter</attribute>
+        <attribute name="isfavorite" type="bool">0</attribute>
+        <attribute name="isactive" type="bool">0</attribute>
+        <relationship name="persons" type="0/0" destination="PERSON" idrefs="z102 z108"></relationship>
+    </object>
+    <object type="ACCOUNT" id="z111">
+        <attribute name="priority" type="int16">1</attribute>
+        <attribute name="name" type="string">Demo account 2</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <relationship name="group" type="1/1" destination="ACCOUNTGROUP"></relationship>
+        <relationship name="person" type="1/1" destination="PERSON"></relationship>
+        <relationship name="availablemodes" type="0/0" destination="MODE" idrefs="z104"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION"></relationship>
+    </object>
+    <object type="TYPE" id="z112">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Demo type 1 of post 1</attribute>
+        <attribute name="includedinstatisticstotal" type="bool">1</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <relationship name="post" type="1/1" destination="POST" idrefs="z109"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION" idrefs="z107"></relationship>
+        <relationship name="sets" type="0/0" destination="TYPESSET"></relationship>
+    </object>
+    <object type="TYPE" id="z113">
+        <attribute name="priority" type="int16">1</attribute>
+        <attribute name="name" type="string">Demo type 2 of post 2</attribute>
+        <attribute name="includedinstatisticstotal" type="bool">1</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <relationship name="post" type="1/1" destination="POST" idrefs="z106"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION"></relationship>
+        <relationship name="sets" type="0/0" destination="TYPESSET"></relationship>
+    </object>
+    <object type="ACCOUNT" id="z114">
+        <attribute name="priority" type="int16">0</attribute>
+        <attribute name="name" type="string">Demo account 1</attribute>
+        <attribute name="filterstate" type="bool">1</attribute>
+        <relationship name="group" type="1/1" destination="ACCOUNTGROUP"></relationship>
+        <relationship name="person" type="1/1" destination="PERSON"></relationship>
+        <relationship name="availablemodes" type="0/0" destination="MODE" idrefs="z104 z105"></relationship>
+        <relationship name="operations" type="0/0" destination="OPERATION" idrefs="z107"></relationship>
+    </object>
+</database>

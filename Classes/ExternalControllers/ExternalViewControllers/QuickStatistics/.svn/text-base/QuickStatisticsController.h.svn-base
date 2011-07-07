@@ -1,0 +1,53 @@
+//
+//  QuickStatisticsController.h
+//  Ges
+//
+//  Created by NeoJF on 22/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+
+#import "ExternalViewController.h"
+#import "FilterController.h"
+
+
+@interface QuickStatisticsController : ExternalViewController {
+
+	/*
+	 * IBOutlets
+	 */
+	
+	// Array controllers
+	IBOutlet RChArrayController*	operationsForSelectedTypeArrayController;
+	IBOutlet RChArrayController*	typesArrayController;
+	
+	// GUI elements
+	IBOutlet NSTableView*			typesTableView;
+}
+
+
+/*
+ * Data
+ */
+- (NSNumber*)balanceOfFilteredOperations;
+
+
+/*
+ * KVO: management
+ */
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context;
+
+
+/*
+ * Accessors
+ */
+
+// Dependences
+- (FilterController*)filterController;
+
+// <NibOwner>
+- (NSArray*)operationsArrayControllers;
+- (NSArray*)typesArrayControllers;
+
+@end

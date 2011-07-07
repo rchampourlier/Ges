@@ -1,0 +1,461 @@
+//
+//  DocumentPropertiesController.m
+//  Ges
+//
+//  Created by NeoJF on 15/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+/**
+ * Controller for the "DocumentProperties" window.
+ * Provides access to the document's managedObjectContext.
+ */
+
+#import "DocumentPropertiesController.h"
+
+
+@implementation DocumentPropertiesController
+
+
+#pragma mark -
+#pragma mark === Life cycle ===
+
+/**
+ * Override of the init method. It allows specifying the particular nib file
+ * that is used with this WindowController - follows the guidelines of the Cocoa
+ * documentation.
+ */
+- (id)init {
+	self = [super initWithWindowNibName:@"DocumentProperties"];
+	if (self != nil) {
+		newAccountsCounter = 0;
+		newModesCounter = 0;
+		newTypesCounter = 0;
+	}
+	return self;
+}
+
+/**
+ * Performs actions once the nib file has been loaded.
+ */
+- (void)awakeFromNib {
+	// Register table view for drag'n'drop operations
+	[accountsTableView registerForDraggedTypes:[NSArray arrayWithObject:entitiesTableViewRowType]];
+	[modesTableView registerForDraggedTypes:[NSArray arrayWithObject:entitiesTableViewRowType]];
+	[postsTypesOutlineView registerForDraggedTypes:[NSArray arrayWithObjects:typesOutlineViewRowType, postsOutlineViewRowType, nil]];
+	
+	// Set sort descriptors for array controllers
+	NSSortDescriptor* sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES];
+	NSArray* sortDescriptorsArray = [NSArray arrayWithObject:sortDescriptor];
+	[accountsArrayController setSortDescriptors:sortDescriptorsArray];
+	[modesArrayController setSortDescriptors:sortDescriptorsArray];
+	[typesArrayController setSortDescriptors:sortDescriptorsArray];
+}
+
+
+#pragma mark -
+#pragma mark === Window management ===
+
+/**
+ * Opens the properties window.
+ */
+- (void)openWindow {
+	[NSApp beginSheet:[self window] modalForWindow:[document windowForSheet] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+}
+
+/**
+ * Closes the properties window.
+ *
+ * Rearrange array controllers for all kinds of entities - except operations. This
+ * may be needed to take account in other nib files of modifications done in
+ * document properties.
+ *
+ * TODO:
+ *	- Array controllers should only be rearranged if needed to optimize code.
+ */
+- (void)closeWindow {
+	NSMutableArray* allArrayControllersArray = [NSMutableArray array];
+	[allArrayControllersArray addObjectsFromArray:[document allNibsAccountsArrayControllers]];
+	[allArrayControllersArray addObjectsFromArray:[document allNibsModesArrayControllers]];
+	[allArrayControllersArray addObjectsFromArray:[document allNibsOperationsArrayControllers]];
+	[allArrayControllersArray addObjectsFromArray:[document allNibsTypesArrayControllers]];
+	
+	NSEnumerator*	allArrayControllers = [allArrayControllersArray objectEnumerator];
+	NSArrayController* arrayController;
+	
+	while (arrayController = ((NSArrayController*)[allArrayControllers nextObject])) {
+		[arrayController rearrangeObjects];
+	}
+	
+	[NSApp endSheet:[self window]];
+	[[self window] orderOut:self];
+}
+
+/**
+ * IBAction for closing the properties window.
+ */
+- (IBAction)closeProperties:(id)sender {
+	[self closeWindow];
+}
+
+
+#pragma mark -
+#pragma mark === Accessors ===
+
+/**
+ * Returns the associated document's managed object context.
+ */
+- (NSManagedObjectContext*)managedObjectContext {
+	return [document managedObjectContext];
+}
+
+/**
+ * Returns the array controller for accounts objects.
+ */
+- (RChArrayController*)accountsArrayController {
+	return accountsArrayController;
+}
+
+/**
+ * Returns the array controller for modes objects.
+ */
+- (RChArrayController*)modesArrayController {
+	return modesArrayController;
+}
+
+/**
+ * Returns the array controller for types objects.
+ */
+- (RChArrayController*)typesArrayController {
+	return typesArrayController;
+}
+
+#pragma mark -
+#pragma mark === Other ===
+
+/**
+ * Returns the account currently selected within the accountsArrayController.
+ * If no or multiple accounts are selected, returns nil.
+ */
+- (NSManagedObject*)selectedAccount {
+	return [accountsArrayController selectedObject];
+}
+
+
+#pragma mark -
+#pragma mark === Data ===
+
+
+#pragma mark -
+#pragma mark === IBActions ===
+
+- (IBAction)addAccount:(id)sender {
+	
+	// Seeking an available default name
+	NSString* defaultName;
+	NSArray* accountsWithDefaultName;
+	
+	do {
+		newAccountsCounter++;
+		defaultName = [NSString stringWithFormat:@"%@ %d", NSLocalizedString(@"accountDefaultName", nil), newAccountsCounter];
+		NSFetchRequest* request = [[[NSFetchRequest alloc] init] autorelease];
+		[request setEntity:[NSEntityDescription entityForName:EntityNameAccount inManagedObjectContext:managedObjectContext]];
+		[request setPredicate:[NSPredicate predicateWithFormat:@"name == %@", defaultName]];
+		accountsWithDefaultName = [managedObjectContext executeFetchRequest:request error:NULL];
+	}
+	while ([accountsWithDefaultName count] > 0);
+	
+	// Inserting the new account in managed object context
+	NSManagedObject* newAccount = [NSEntityDescription insertNewObjectForEntityForName:EntityNameAccount inManagedObjectContext:managedObjectContext];
+	NSMutableSet* availableModesSet = [newAccount mutableSetValueForKey:@"availableModes"];
+
+	// Setting initial values
+	[newAccount setValue:defaultName forKey:@"name"];
+	int priority = [accountsTableView numberOfRows];
+	[newAccount setValue:[NSNumber numberWithInt:priority] forKey:@"priority"];
+	[availableModesSet addObjectsFromArray:[modesArrayController content]];
+	
+	[managedObjectContext processPendingChanges];
+	[accountsTableView selectRow:priority byExtendingSelection:NO];
+	[accountsTableView editColumn:0 row:priority withEvent:nil select:YES];
+	
+	[document addAccountToSelection:newAccount];
+}
+
+- (IBAction)removeAccount:(id)sender {
+	int numberOfDeletedOperations = [[[accountsArrayController selectedObject] valueForKey:@"operations"] count];
+	
+	if (numberOfDeletedOperations > 0) {
+		NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+		[alert setMessageText:NSLocalizedString(@"deletingAccountConfirmationAlertMessage", nil)];
+		[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"deletingAccountConfirmationAlertInfo", nil), numberOfDeletedOperations]];
+		[alert addButtonWithTitle:NSLocalizedString(@"deletingAccountConfirmationAlertButtonYes", nil)];
+		[alert addButtonWithTitle:NSLocalizedString(@"deletingAccountConfirmationAlertButtonNo", nil)];
+		[alert setIcon:[NSImage imageNamed:@"Barred_64x64"]];
+		[alert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:alertContextInfoDeletingAccountConfirmation];
+	}
+	else {
+		[self removeAccount];
+	}
+}
+
+- (void)removeAccount {
+	[[self managedObjectContext] deleteObject:[accountsArrayController selectedObject]];
+	[[self managedObjectContext] processPendingChanges];
+}
+
+- (IBAction)addMode:(id)sender {
+	// Seeking an available default name
+	NSString* defaultName;
+	NSArray* modesWithDefaultName;
+	
+	do {
+		newModesCounter++;
+		defaultName = [NSString stringWithFormat:@"%@ %d", NSLocalizedString(@"operationModeDefaultName", nil), newModesCounter];
+		NSFetchRequest* request = [[[NSFetchRequest alloc] init] autorelease];
+		[request setEntity:[NSEntityDescription entityForName:EntityNameMode inManagedObjectContext:managedObjectContext]];
+		[request setPredicate:[NSPredicate predicateWithFormat:@"name == %@", defaultName]];
+		modesWithDefaultName = [managedObjectContext executeFetchRequest:request error:NULL];
+	}
+	while ([modesWithDefaultName count] > 0);
+	
+	// Inserting the new mode in managed object context
+	NSManagedObject* newMode = [NSEntityDescription insertNewObjectForEntityForName:EntityNameMode inManagedObjectContext:managedObjectContext];
+	
+	// Setting initial values
+	[newMode setValue:defaultName forKey:@"name"];
+	int priority = [modesTableView numberOfRows];
+	[newMode setValue:[NSNumber numberWithInt:[modesTableView numberOfRows]] forKey:@"priority"];
+
+	// The created mode is added to the 'availableModes' relationship of each account.
+	NSArray* accountsArray = [accountsArrayController content];
+	int i;
+	for (i = 0; i < [accountsArray count]; i++) {
+		NSMutableSet* availableModesSet = [[accountsArray objectAtIndex:i] mutableSetValueForKey:@"availableModes"];
+		[availableModesSet addObject:newMode];
+	}
+	
+	[managedObjectContext processPendingChanges];
+	[modesTableView selectRow:priority byExtendingSelection:NO];
+	[modesTableView editColumn:0 row:priority withEvent:nil select:YES];
+
+	[document addModeToSelection:newMode];
+}
+
+- (IBAction)removeMode:(id)sender {
+	int numberOfDeletedOperations = [[[modesArrayController selectedObject] valueForKey:@"operations"] count];
+	
+	if (numberOfDeletedOperations > 0) {
+		NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+		[alert setMessageText:NSLocalizedString(@"deletingModeConfirmationAlertMessage", nil)];
+		[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"deletingModeConfirmationAlertInfo", nil), numberOfDeletedOperations]];
+		[alert addButtonWithTitle:NSLocalizedString(@"deletingModeConfirmationAlertButtonYes", nil)];
+		[alert addButtonWithTitle:NSLocalizedString(@"deletingModeConfirmationAlertButtonNo", nil)];
+		[alert setIcon:[NSImage imageNamed:@"Barred_64x64"]];
+		[alert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:AlertContextInfoDeletingModeConfirmation];
+	}
+	else {
+		[self removeMode];
+	}
+}
+
+- (void)removeMode {
+	[[self managedObjectContext] deleteObject:[modesArrayController selectedObject]];
+	[[self managedObjectContext] processPendingChanges];
+}
+
+- (IBAction)addPost:(id)sender {
+}
+
+- (IBAction)removePostOrType:(id)sender {
+}
+
+- (IBAction)addType:(id)sender {
+	// Seeking an available default name
+	NSString* defaultName;
+	NSArray* typesWithDefaultName;
+	
+	do {
+		newTypesCounter++;
+		defaultName = [NSString stringWithFormat:@"%@ %d", NSLocalizedString(@"operationTypeDefaultName", nil), newTypesCounter];
+		NSFetchRequest* request = [[[NSFetchRequest alloc] init] autorelease];
+		[request setEntity:[NSEntityDescription entityForName:EntityNameType inManagedObjectContext:managedObjectContext]];
+		[request setPredicate:[NSPredicate predicateWithFormat:@"name == %@", defaultName]];
+		typesWithDefaultName = [managedObjectContext executeFetchRequest:request error:NULL];
+	}
+	while ([typesWithDefaultName count] > 0);
+	
+	// Inserting the new type in managed object context	
+	NSManagedObject* newType = [NSEntityDescription insertNewObjectForEntityForName:EntityNameType inManagedObjectContext:managedObjectContext];
+
+	// Setting initial values
+	[newType setValue:defaultName forKey:@"name"];
+	int priority = [[typesArrayController content] count];
+	[newType setValue:[NSNumber numberWithInt:priority] forKey:@"priority"];
+
+	[managedObjectContext processPendingChanges];
+	/*[typesTableView selectRow:priority byExtendingSelection:NO];
+	[typesTableView editColumn:0 row:priority withEvent:nil select:YES];
+	*/
+	[document addTypeToSelection:newType];
+}
+
+- (IBAction)removeType:(id)sender {
+	int numberOfDeletedOperations = [[typesArrayController valueForKeyPath:@"selection.operations"] count];
+	
+	if (numberOfDeletedOperations > 0) {
+		NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+		[alert setMessageText:NSLocalizedString(@"deletingTypeConfirmationAlertMessage", nil)];
+		[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"deletingTypeConfirmationAlertInfo", nil), numberOfDeletedOperations]];
+		[alert addButtonWithTitle:NSLocalizedString(@"deletingTypeConfirmationAlertButtonYes", nil)];
+		[alert addButtonWithTitle:NSLocalizedString(@"deletingTypeConfirmationAlertButtonNo", nil)];
+		[alert setIcon:[NSImage imageNamed:@"Barred_64x64"]];
+		[alert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:AlertContextInfoDeletingTypeConfirmation];
+	}
+	else {
+		[self removeType];
+	}
+}
+
+
+#pragma mark -
+#pragma mark === Other ===
+
+- (void)removeType {
+	[[self managedObjectContext] deleteObject:[typesArrayController selectedObject]];
+	[[self managedObjectContext] processPendingChanges];
+}
+
+- (void)removePost {
+}
+
+- (void)alertDidEnd:(NSAlert *)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo {
+	NSString* context = (NSString*)contextInfo;
+	
+	if ([context isEqualToString:alertContextInfoDeletingAccountConfirmation]) {
+		// Deleting account
+		if (returnCode == NSAlertFirstButtonReturn) {
+			// "Yes" button clicked
+			[self removeAccount];
+		}
+	}
+	
+	else if ([context isEqualToString:AlertContextInfoDeletingModeConfirmation]) {
+		// Deleting mode
+		if (returnCode == NSAlertFirstButtonReturn) {
+			// "Yes" button clicked
+			[self removeMode];
+		}
+	}
+	
+	else if ([context isEqualToString:AlertContextInfoDeletingTypeConfirmation]) {
+		// Deleting type
+		if (returnCode == NSAlertFirstButtonReturn) {
+			// "Yes" button clicked
+			[self removeType];
+		}
+	}
+	
+	else if ([context isEqualToString:alertContextInfoRemovingValueDatesConfirmation]) {
+		// Removing value dates
+		NSManagedObject* selectedOperationMode = [modesArrayController selectedObject];
+		if (returnCode == NSAlertFirstButtonReturn) {
+			// "Yes" button clicked
+			
+			// Fetching all operations of the selected mode.
+			NSEntityDescription* entityDescription = [NSEntityDescription entityForName:@"Operation" inManagedObjectContext:managedObjectContext];
+			NSFetchRequest* request = [[[NSFetchRequest alloc] init] autorelease];
+			[request setEntity:entityDescription];
+			NSPredicate* predicate = [NSPredicate predicateWithFormat:@"mode == %@", selectedOperationMode];
+			[request setPredicate:predicate];
+			NSArray* array = [managedObjectContext executeFetchRequest:request error:NULL];
+			
+			// Removing the value date for each fetched operation
+			int i;
+			for (i = 0; i < [array count]; i++) {
+				[[array objectAtIndex:i] setValue:nil forKey:@"valueDate"];
+			}
+		}
+		else {
+			// Restoring the previous state of the allowsValueDate property of the operationMode.
+			[selectedOperationMode setValue:[NSNumber numberWithBool:YES] forKey:@"allowsValueDate"];
+		}
+	}
+}
+
+
+#pragma mark -
+#pragma mark === Responder chain IBActions ===
+
+/**
+ * Depending on the current properties view, allows deletion of the selected entity
+ * through the responder chain action event 'delete:'.
+ *
+ * This action is intended to be reached through the responders chain. For this
+ * reason, other 'delete:' methods should be available in previous responders in
+ * case other entities should be deleted.
+ */
+- (IBAction)delete:(id)sender {
+	int row = [propertiesTableView selectedRow];
+	switch (row) {
+		case 0:
+			// Properties: accounts
+			[self removeAccount:self];
+			break;
+		case 1:
+			// Properties: modes
+			[self removeMode:self];
+			break;
+		case 2:
+			// Properties: types
+			[self removeType:self];
+			break;
+	}
+}
+
+
+#pragma mark -
+#pragma mark === <NibOwner> ===
+
+/**
+ * Returns an array of all array controllers managing accounts in the nib file.
+ * The array contains:
+ *	- 'accountsArrayController'.
+ */
+- (NSArray*)accountsArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:accountsArrayController];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing modes in the nib file.
+ * The array contains:
+ *	- 'modesArrayController',
+ *	- 'modesAvailableForSelectedAccountArrayController'.
+ */
+- (NSArray*)modesArrayControllers {
+	NSArray* array = [NSArray arrayWithObjects:modesArrayController, modesAvailableForSelectedAccountArrayController, nil];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing operations in the nib file.
+ * The array contains:
+ *	- 'operationsArrayController'.
+ */
+- (NSArray*)operationsArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:operationsArrayController];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing types in the nib file.
+ * The array contains:
+ *	- 'typesArrayController'.
+ */
+- (NSArray*)typesArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:typesArrayController];
+	return array;
+}
+
+@end

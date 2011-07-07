@@ -1,0 +1,344 @@
+//
+//  FilterController.m
+//  Ges
+//
+//  Created by NeoJF on 06/10/05.
+//  Copyright 2005 __MyCompanyName__. All rights reserved.
+//
+
+#import "FilterController.h"
+
+
+@implementation FilterController
+
+
+#pragma mark -
+#pragma mark === Life cycle ===
+
+- (id)init {
+	self = [super init];
+	if (self != nil) {
+		
+		// Filter data
+		startDate = [[NSDate date] retain];
+		endDate = [[NSDate date] retain];
+		
+		/*
+		 * Sets initial predicates
+		 */
+		
+		// External predicates
+		searchTextPredicate = nil;
+		
+		// Subpredicates
+		accountsFilterPredicate = [[NSPredicate predicateWithValue:YES] retain];
+		markedStatePredicate = [[NSPredicate predicateWithValue:YES] retain];
+		operationModesFilterPredicate = [[NSPredicate predicateWithValue:YES] retain];
+		operationTypesFilterPredicate = [[NSPredicate predicateWithValue:YES] retain];
+		periodFilterPredicate = [[NSPredicate predicateWithValue:YES] retain];
+		pointedStatePredicate = [[NSPredicate predicateWithValue:YES] retain];
+		typeForStatsPredicate = [[NSPredicate predicateWithValue:YES] retain];
+	}
+	return self;
+}
+
+- (void)awakeFromNib {
+	[self addObservers];
+}
+
+- (void)dealloc {
+	
+	// Filter data
+	[startDate release];
+	[endDate release];
+	
+	// Predicates
+	[accountsFilterPredicate release];
+	[markedStatePredicate release];
+	[operationModesFilterPredicate release];
+	[operationTypesFilterPredicate release];
+	[periodFilterPredicate release];
+	[pointedStatePredicate release];
+	[typeForStatsPredicate release];
+	[super dealloc];
+}
+
+
+#pragma mark -
+#pragma mark === KVO management ===
+
+/**
+ * Surveys different value from array controllers to know if the operations
+ * need to be rearranged.
+ * Surveyed values:
+ *	- accountsArrayController's selection,
+ *	- operationModesArrayController's selection,
+ *	- operationTypesArrayController's selection,
+ *	- typesForStatsArrayController's selection.
+ *
+ * TODO: verify this happen only if there is a change, to prevent from wasting time.
+ */
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context {
+	if (object == accountsArrayController) {
+		NSArray* argumentArray = [NSArray arrayWithObject:[accountsArrayController selectedObjects]];
+		[accountsFilterPredicate release];
+		accountsFilterPredicate = [[NSPredicate predicateWithFormat:@"account IN %@" argumentArray:argumentArray] retain];
+	}
+	else if (object == operationModesArrayController) {
+		NSArray* argumentArray = [NSArray arrayWithObject:[operationModesArrayController selectedObjects]];
+		[operationModesFilterPredicate release];
+		operationModesFilterPredicate = [[NSPredicate predicateWithFormat:@"mode IN %@" argumentArray:argumentArray] retain];
+	}
+	else if (object == operationTypesArrayController) {
+		NSArray* argumentArray = [NSArray arrayWithObject:[operationTypesArrayController selectedObjects]];
+		[operationTypesFilterPredicate release];
+		operationTypesFilterPredicate = [[NSPredicate predicateWithFormat:@"type IN %@" argumentArray:argumentArray] retain];
+	}
+	[self rebuildPredicates];
+}
+
+- (void)addObservers {
+	[self addObserver:browserDelegate forKeyPath:@"periodFilterEnabled" options:NSKeyValueObservingOptionNew context:nil];
+	[accountsArrayController addObserver:self forKeyPath:@"selection" options:nil context:nil];
+	[operationModesArrayController addObserver:self forKeyPath:@"selection" options:nil context:nil];
+	[operationTypesArrayController addObserver:self forKeyPath:@"selection" options:nil context:nil];
+}
+
+- (void)removeObservers {
+	[self removeObserver:browserDelegate forKeyPath:@"periodFilterEnabled"];
+	[accountsArrayController removeObserver:self forKeyPath:@"selection"];
+	[operationModesArrayController removeObserver:self forKeyPath:@"selection"];
+	[operationTypesArrayController removeObserver:self forKeyPath:@"selection"];
+}
+
+
+#pragma mark -
+#pragma mark === KVO: read accessors ===
+
+- (BOOL)isPeriodFilterEnabled {
+	return periodFilterEnabled;
+}
+
+/**
+ * Returns the value of the property 'markedState'.
+ */
+- (BOOL)markedState {
+	return markedState;
+}
+
+- (int)pointedState {
+	return pointedState;
+}
+
+- (NSDate *)endDate {
+	return endDate;
+}
+
+- (NSDate*)startDate {
+	return startDate;
+}
+
+- (NSPredicate *)filterPredicate {
+	return filterPredicate;
+}
+
+/**
+ * Returns the predicate used by the search field of the toolbar when searching
+ * on the 'operationDescription' value.
+ */
+- (NSPredicate*)searchTextPredicate {
+	return searchTextPredicate;
+}
+
+- (NSPredicate *)statisticsFilterPredicate {
+	return statisticsFilterPredicate;
+}
+
+
+#pragma mark -
+#pragma mark === KVC: write accessors ===
+
+/**
+ * Sets the value of the 'markedState' property.
+ * If the value changed, predicates are rebuild.
+ */
+- (void)setMarkedState:(BOOL)state {
+	if (markedState != state) {
+		markedState = state;
+		
+		if (markedState == NO) {
+			markedStatePredicate = [NSPredicate predicateWithValue:YES];
+		}
+		else {
+			markedStatePredicate = [NSPredicate predicateWithFormat:@"markedState == YES"];
+		}
+		[self rebuildPredicates];
+	}
+}
+
+- (void)setPeriodFilterEnabled:(BOOL)value {
+	if (periodFilterEnabled != value) {
+		periodFilterEnabled = value;
+		[self rebuildPredicates];
+	}
+}
+
+- (void)setPointedState:(int)state {
+	pointedState = state;
+	
+	if (pointedState == (POINTED_STATE_UNSET|POINTED_STATE_ENABLED|POINTED_STATE_DISABLED)) {
+		pointedStatePredicate = [NSPredicate predicateWithValue:YES];
+	}
+	else {
+		NSMutableArray* subPredicatesArray = [NSMutableArray array];
+		if (pointedState & POINTED_STATE_UNSET) {
+			NSNumber* state = [NSNumber numberWithInt:POINTED_STATE_UNSET];
+			NSPredicate* predicate = [NSPredicate predicateWithFormat:@"pointedState == %d" argumentArray:[NSArray arrayWithObject:state]];
+			[subPredicatesArray addObject:predicate];
+		}
+		if (pointedState & POINTED_STATE_ENABLED) {
+			NSNumber* state = [NSNumber numberWithInt:POINTED_STATE_ENABLED];
+			NSPredicate* predicate = [NSPredicate predicateWithFormat:@"pointedState == %d" argumentArray:[NSArray arrayWithObject:state]];
+			[subPredicatesArray addObject:predicate];
+		}
+		if (pointedState & POINTED_STATE_DISABLED) {
+			NSNumber* state = [NSNumber numberWithInt:POINTED_STATE_DISABLED];
+			NSPredicate* predicate = [NSPredicate predicateWithFormat:@"pointedState == %d" argumentArray:[NSArray arrayWithObject:state]];
+			[subPredicatesArray addObject:predicate];
+		}
+		pointedStatePredicate = [NSCompoundPredicate orPredicateWithSubpredicates:subPredicatesArray];
+	}
+	
+	[self rebuildPredicates];
+}
+
+- (void)setEndDate:(NSDate*)aDate {
+#ifdef TRACE_FILTER_PERIOD
+	printf("[FilterController setEndDate:%s]\n", [[aDate descriptionWithCalendarFormat:@"%d/%m/%y %H:%M:%S" timeZone:nil locale:nil] cString]);
+#endif
+	
+	[endDate release];
+	endDate = [aDate retain];
+	NSArray *argumentArray = [NSArray arrayWithObjects: startDate, endDate, nil];
+	periodFilterPredicate = [[NSPredicate predicateWithFormat:@"operationDate BETWEEN {%@, %@}" argumentArray:argumentArray] retain];
+	[self rebuildPredicates];
+}
+
+- (void)setStartDate:(NSDate*)aDate {
+#ifdef TRACE_FILTER_PERIOD
+	printf("[FilterController setStartDate:%s]\n", [[aDate descriptionWithCalendarFormat:@"%d/%m/%y %H:%M:%S" timeZone:nil locale:nil] cString]);
+#endif
+	
+	[startDate release];
+	startDate = [aDate retain];
+	NSArray* argumentArray = [NSArray arrayWithObjects: startDate, endDate, nil];
+	periodFilterPredicate = [[NSPredicate predicateWithFormat:@"operationDate BETWEEN {%@, %@}" argumentArray:argumentArray] retain];
+	[self rebuildPredicates];
+}
+
+/**
+ * Sets the predicate used by the search field when searching on the
+ * 'operationDescription' value.
+ */
+- (void)setSearchTextPredicate:(NSPredicate*)predicate {
+	searchTextPredicate = predicate;
+	[self rebuildPredicates];
+}
+
+
+#pragma mark -
+#pragma mark === Actions ===
+
+- (IBAction)categoryTypePopUpButtonAction:(id)sender {
+	[categoryTabView selectTabViewItemAtIndex:[[sender selectedItem] tag]];
+}
+
+- (IBAction)dateTypePopUpButtonAction:(id)sender {
+	[dateTabView selectTabViewItemAtIndex:[[sender selectedItem] tag]];
+}
+
+- (IBAction)categorySelectAllButton:(id)sender {
+}
+
+- (IBAction)categorySelectNoneButton:(id)sender {
+}
+
+
+#pragma mark -
+#pragma mark === Predicates construction ===
+
+- (void) rebuildPredicates {
+	[self rebuildFilterPredicate];
+	//[self rebuildStatisticsFilterPredicate];
+}
+
+/**
+ * Rebuilds the main filter predicate. It is used to filter all operations and
+ * take accounts of all available filter criterias:
+ *	- accounts,
+ *	- marked state,
+ *	- modes,
+ *	- period,
+ *	- pointed state,
+ *	- search on description,
+ *	- types.
+ *
+ * It is build by using the 'statisticsFilterPredicate' which does not take the types
+ * criteria into account.
+ */
+- (void)rebuildFilterPredicate {
+	[self rebuildStatisticsFilterPredicate];
+	NSArray* subpredicates = [NSArray arrayWithObjects:statisticsFilterPredicate, operationTypesFilterPredicate, nil];
+	
+	[self willChangeValueForKey:@"filterPredicate"];
+	[filterPredicate release];
+	filterPredicate = [[NSCompoundPredicate andPredicateWithSubpredicates:subpredicates] retain];
+	[self didChangeValueForKey:@"filterPredicate"];
+}
+
+- (void)rebuildStatisticsFilterPredicate {
+	NSMutableArray* subpredicates = [NSMutableArray arrayWithObjects:accountsFilterPredicate, markedStatePredicate, operationModesFilterPredicate, pointedStatePredicate, nil];
+	
+	if (periodFilterEnabled) {
+		[subpredicates addObject:periodFilterPredicate];
+	}
+	if (searchTextPredicate != nil) {
+		[subpredicates addObject:searchTextPredicate];
+	}
+
+	[self willChangeValueForKey:@"statisticsFilterPredicate"];
+	[statisticsFilterPredicate release];
+	statisticsFilterPredicate = [[NSCompoundPredicate andPredicateWithSubpredicates:subpredicates] retain];
+	[self didChangeValueForKey:@"statisticsFilterPredicate"];
+}
+
+
+#pragma mark -
+#pragma mark === External requests ===
+
+/**
+ * Returns 'YES' if 'object' is accepted by the filter, else 'NO'.
+ *
+ * Determination of acceptance of 'object' depends on the entity it
+ * represents:
+ *	- 'Account': an account is accepted if operations of this account
+ * are accepted by the filter,
+ *	- 'OperationMode': idem,
+ *	- 'OperationType': idem.
+ */
+- (BOOL)managedObjectAcceptedByFilter:(NSManagedObject*)object {
+	NSString* entityName = [[object entity] name];
+	
+	if (([entityName isEqualToString:EntityNameAccount] &&
+		 [((NSArray*)[accountsArrayController selectedObjects]) containsObject:object]) ||
+		([entityName isEqualToString:EntityNameMode] &&
+		 [((NSArray*)[operationModesArrayController selectedObjects]) containsObject:object]) ||
+		([entityName isEqualToString:EntityNameType] &&
+		 [((NSArray*)[operationTypesArrayController selectedObjects]) containsObject:object])) {
+		return YES;
+	}
+	
+	return NO;
+}
+
+@end

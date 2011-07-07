@@ -1,0 +1,189 @@
+//
+//  SortDescriptorsController.m
+//  Ges
+//
+//  Created by NeoJF on 23/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import "SortDescriptorsController.h"
+
+/**
+ * Provides in a single class a common way to manage sort descriptors of the
+ * different kinds of entities used by the program:
+ *	- operations,
+ *	- accounts,
+ *	- modes,
+ *	- types.
+ *
+ * This class is intended to be instantiated for each group of array controllers
+ * which requires its services. In particular, each nib file containing array
+ * controllers of previously indicated entities should use an instance of this
+ * class to bind array controllers' 'sortDescriptors' properties with the corresponding
+ * property of the 'SortDescriptorsController' instance.
+ */
+@implementation SortDescriptorsController
+
+
+#pragma mark -
+#pragma mark === Life cycle ===
+
+/**
+ * Inits the 'SortDescriptorsController'.
+ *
+ * Creates the initial sort descriptors for all managed entity types.
+ */
+- (id)init {
+	self = [super init];
+	if (self != nil) {
+		accountsSortDescriptors = [[self defaultAccountsSortDescriptors] retain];
+		modesSortDescriptors = [[self defaultModesSortDescriptors] retain];
+		operationsSortDescriptors = [[self defaultOperationsSortDescriptors] retain];
+		typesSortDescriptors = [[self defaultTypesSortDescriptors] retain];
+	}
+	return self;
+}
+
+/**
+ * Deallocates the 'SortDescriptorsController'.
+ *
+ * Release previously retained objects, essentially sort descriptors.
+ */
+- (void)dealloc {
+	[accountsSortDescriptors release];
+	[modesSortDescriptors release];
+	[operationsSortDescriptors release];
+	[typesSortDescriptors release];
+	[super dealloc];
+}
+
+
+#pragma mark -
+#pragma mark === KVO ===
+
+/**
+ * Returns the sort descriptors for accounts.
+ * 
+ * KVC is enabled for this property, what means its value may be changed
+ * according to editions performed during execution. In particular, if this
+ * property is bound, the value set initialization will be erased.
+ */
+- (NSArray*)accountsSortDescriptors {
+	return accountsSortDescriptors;
+}
+
+/**
+ * Returns the default sort descriptors for accounts.
+ * 
+ * These descriptors are the same than the one set at initialization 
+ * of the controller. It may be useful to use these descriptors for array
+ * controllers which are intended to keep sorted in the same way.
+ */
+- (NSArray*)defaultAccountsSortDescriptors {
+	NSSortDescriptor* prioritySD = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES];
+	return [NSArray arrayWithObject:prioritySD];
+}
+
+/**
+ * Returns the sort descriptors for operations.
+ * 
+ * KVC is enabled for this property, what means its value may be changed
+ * according to editions performed during execution. In particular, if this
+ * property is bound, the value set initialization will be erased.
+ */
+- (NSArray*)modesSortDescriptors {
+	return modesSortDescriptors;
+}
+
+/**
+ * Returns the default sort descriptors for modes.
+ * 
+ * These descriptors are the same than the one set at initialization 
+ * of the controller. It may be useful to use these descriptors for array
+ * controllers which are intended to keep sorted in the same way.
+ */
+- (NSArray*)defaultModesSortDescriptors {
+	NSSortDescriptor* prioritySD = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES];
+	return [NSArray arrayWithObject:prioritySD];
+}
+
+/**
+ * Returns the sort descriptors for operations.
+ * 
+ * KVC is enabled for this property, what means its value may be changed
+ * according to editions performed during execution. In particular, if this
+ * property is bound, the value set initialization will be erased.
+ */
+- (NSArray*)operationsSortDescriptors {
+	return operationsSortDescriptors;
+}
+
+/**
+ * Returns the default sort descriptors for modes.
+ * 
+ * These descriptors are the same than the one set at initialization 
+ * of the controller. It may be useful to use these descriptors for array
+ * controllers which are intended to keep sorted in the same way.
+ */
+- (NSArray*)defaultOperationsSortDescriptors {
+	NSSortDescriptor* operationDateSD = [[NSSortDescriptor alloc] initWithKey:@"operationDate" ascending:NO];
+	NSSortDescriptor* operationDescriptionSD = [[NSSortDescriptor alloc] initWithKey:@"operationDescription" ascending:YES];
+	return [NSArray arrayWithObjects:operationDateSD, operationDescriptionSD, nil];
+}
+
+/**
+ * Returns the sort descriptors for types.
+ * 
+ * KVC is enabled for this property, what means its value may be changed
+ * according to editions performed during execution. In particular, if this
+ * property is bound, the value set initialization will be erased.
+ */
+- (NSArray*)typesSortDescriptors {
+	return typesSortDescriptors;
+}
+
+/**
+ * Returns the default sort descriptors for types.
+ * 
+ * These descriptors are the same than the one set at initialization 
+ * of the controller. It may be useful to use these descriptors for array
+ * controllers which are intended to keep sorted in the same way.
+ */
+- (NSArray*)defaultTypesSortDescriptors {
+	NSSortDescriptor* prioritySD = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES];
+	return [NSArray arrayWithObject:prioritySD];
+}
+
+
+#pragma mark -
+#pragma mark === KVC ===
+
+/**
+ * Sets the sort descriptors for accounts.
+ */
+/*- (void)setAccountsSortDescriptors:(NSArray*)sortDescriptors {
+	accountsSortDescriptors = sortDescriptors;
+}*/
+
+/**
+ * Sets the sort descriptors for modes.
+ */
+/*- (void)setModesSortDescriptors:(NSArray*)sortDescriptors {
+	modesSortDescriptors = sortDescriptors;
+}*/
+
+/**
+ * Sets the sort descriptors for operations.
+ */
+- (void)setOperationsSortDescriptors:(NSArray*)sortDescriptors {
+	operationsSortDescriptors = sortDescriptors;
+}
+
+/**
+ * Sets the sort descriptors for types.
+ */
+/*- (void)setTypesSortDescriptors:(NSArray*)sortDescriptors {
+	typesSortDescriptors = sortDescriptors;
+}*/
+
+@end

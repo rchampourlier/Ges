@@ -1,0 +1,28 @@
+{
+    IBClasses = (
+        {
+            CLASS = ExternalViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {view = NSView; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {"" = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = QuickStatisticsController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                operationsForSelectedTypeArrayController = RChArrayController; 
+                typesArrayController = RChArrayController; 
+            }; 
+            SUPERCLASS = ExternalViewController; 
+        }, 
+        {CLASS = RChArrayController; LANGUAGE = ObjC; SUPERCLASS = NSArrayController; }, 
+        {CLASS = SortDescriptorsController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}

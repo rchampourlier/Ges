@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Classes/Nib%20Owners/Document/GUI%20Controllers"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="QuickAccountFilterPopUpController.m"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="8d505bb46e6822f0b9b4560f1f00ef42"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+<entry
+   committed-rev="1"
+   name="QuickAccountFilterPopUpController.h"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="4906dec2c0b8ce697c68d03c0549be0d"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+</wc-entries>

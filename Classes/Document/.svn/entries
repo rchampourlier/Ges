@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Classes/Nib%20Owners/Document"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="MyDocument.m"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="7870c1e5430031f95ed1427bd9ef5559"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:12.000000Z"/>
+<entry
+   committed-rev="1"
+   name="MyDocument_Toolbar.m"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="e59152eef44c975d25bf3b08eaf3c7d7"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:12.000000Z"/>
+<entry
+   name="GUI Delegates"
+   kind="dir"/>
+<entry
+   name="ValueTransformers"
+   kind="dir"/>
+<entry
+   name="GUI Components"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="MyDocument.h"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="b06a63f4d6da843cc7a57636c6316d34"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+<entry
+   name="GUI Controllers"
+   kind="dir"/>
+</wc-entries>

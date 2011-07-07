@@ -1,0 +1,24 @@
+/*
+ * This files allows rapidly enabling traces and debug information output
+ * to console for all source files thanks to a single define.
+ * 
+ * The following defines are possible:
+ *	- TRACE_ALL: activates all debug and informational traces.
+ *	- BENCHMARK_ALL: activates all benchmark traces.
+ */
+
+
+//#define TRACE_ALL
+
+#ifdef TRACE_ALL
+#define MY_DOCUMENT_TRACE_DATA
+#define MY_DOCUMENT_TRACE_KVO
+#define MY_DOCUMENT_TRACE_LIFE_CYCLE
+#endif
+
+
+//#define BENCHMARK_ALL
+
+#ifdef BENCHMARK_ALL
+#define MY_DOCUMENT_BENCHMARK
+#endif

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Classes/Application"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="ApplicationController.m"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="73e11461e205721536171c8fe09e9639"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+<entry
+   committed-rev="1"
+   name="SortDescriptorsController.h"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="19f1a3de3eb98b32f3a75d975950f603"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+<entry
+   committed-rev="1"
+   name="SortDescriptorsController.m"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="60da27a9d2189ea144dccf4d0f21abd1"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+<entry
+   committed-rev="1"
+   name="ApplicationController.h"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="f143ceea24d5a483d53fa83676eafdee"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+</wc-entries>

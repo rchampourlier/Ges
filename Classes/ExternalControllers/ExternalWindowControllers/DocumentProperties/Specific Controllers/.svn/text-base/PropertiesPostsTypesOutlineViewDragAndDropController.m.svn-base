@@ -1,0 +1,124 @@
+//
+//  PropertiesPostsTypesOutlineViewDragAndDropController.m
+//  Ges
+//
+//  Created by NeoJF on 12/11/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import "PropertiesPostsTypesOutlineViewDragAndDropController.h"
+
+
+@implementation PropertiesPostsTypesOutlineViewDragAndDropController
+
+
+/**
+ * Called when the instance has been loaded from the nib file.
+ * Sets the sort descriptors for the types and posts tree controller.
+ */
+- (void)awakeFromNib {
+	NSSortDescriptor* sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES];
+	NSArray* sortDescriptorsArray = [NSArray arrayWithObject:sortDescriptor];
+	[postsTypesTreeController setSortDescriptors:sortDescriptorsArray];	
+}
+
+/*
+ * Methods for the NSOutlineView's datasource protocol are implemented in order
+ * the registered datasource to be accepted and thus drag'n'drop functions
+ * supported.
+ * They do not provide results since the content filling is assumed by the
+ * Cocoa bindings.
+ */
+#pragma mark -
+#pragma mark === Datasource ===
+
+- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item {
+	return 0;
+}
+
+- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item {
+	return NO;
+}
+
+- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item {
+	return nil;
+}
+
+- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item {
+	return nil;
+}
+
+
+#pragma mark -
+#pragma mark === Drag'n'drop management ===
+
+/**
+ * Responds to the end of a drag'n'drop operation. 'item' is the parent of the element
+ * over which the mouse was released.
+ */
+- (BOOL)outlineView:(NSOutlineView *)outlineView acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index {
+	NSString* draggedType = [[[info draggingPasteboard] types] objectAtIndex:0];
+	NSPasteboard* pboard = [info draggingPasteboard];
+	
+	if ([draggedType isEqualToString:postsOutlineViewRowType]) {
+		NSData* rowData = [pboard dataForType:postsOutlineViewRowType];
+	    NSNumber* draggedPostPriority = [NSKeyedUnarchiver unarchiveObjectWithData:rowData];
+		printf("dragged post priority: %d\n", [draggedPostPriority intValue]);
+	}
+	else {
+		NSData *rowData = [pboard dataForType:typesOutlineViewRowType];
+		NSArray *draggedTypeIdentifiersArray = [NSKeyedUnarchiver unarchiveObjectWithData:rowData];
+		NSNumber *parentPostPriority = [draggedTypeIdentifiersArray objectAtIndex:1];
+		NSNumber *typePriority = [draggedTypeIdentifiersArray objectAtIndex:0];
+		printf("dragged type priority: %d parent post priority: %d\n", [typePriority intValue], [parentPostPriority intValue]);
+
+		// Fetching the dragged type
+		NSFetchRequest *request = [[[NSFetchRequest alloc] init] autorelease];
+		[request setEntity:[NSEntityDescription entityForName:EntityNameType inManagedObjectContext:[documentPropertiesController managedObjectContext]]];
+		[request setPredicate:[NSPredicate predicateWithFormat:@"post.priority == %@ AND priority == %@", parentPostPriority, typePriority]];
+		NSManagedObject *type = [[[documentPropertiesController managedObjectContext] executeFetchRequest:request error:NULL] objectAtIndex:0];
+		printf("type: %s parent post: %s\n", [[type valueForKey:@"name"] cString], [[type valueForKey:@"post.name"] cString]);
+	}
+	
+	return NO;
+}
+
+- (NSDragOperation)outlineView:(NSOutlineView *)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index {
+	NSString* draggedType = [[[info draggingPasteboard] types] objectAtIndex:0];
+	NSManagedObject* destinationObject = [NSTreeController objectForOutlineItem:item];
+	if ([[[destinationObject entity] name] isEqualToString:EntityNameType]) {
+		return NSDragOperationNone;
+	}
+	else {
+		if ([draggedType isEqualToString:postsOutlineViewRowType] && destinationObject != nil) {
+			return NSDragOperationNone;
+		}
+		else {
+			return NSDragOperationEvery;
+		}
+	}
+	return NSDragOperationNone;
+}
+
+/**
+ * Called when a drag'n'drop operation is initiated. If the operation is allowed, 'YES' is
+ * returned and the data for it is passed to the given pasteboard.
+ */
+- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pboard {
+	NSManagedObject* object = [[NSTreeController objectsForOutlineItems:items] objectAtIndex:0];
+
+	if ([[[object entity] name] isEqualToString:EntityNameType]) {
+		NSArray *dataArray = [NSArray arrayWithObjects:[object valueForKeyPath:@"post.priority"], [object valueForKey:@"priority"], nil];
+		NSData *data = [NSKeyedArchiver archivedDataWithRootObject:dataArray];
+		[pboard declareTypes:[NSArray arrayWithObject:typesOutlineViewRowType] owner:self];
+		[pboard setData:data forType:typesOutlineViewRowType];
+	}
+	else {
+		NSData *data = [NSKeyedArchiver archivedDataWithRootObject:[object valueForKey:@"priority"]];
+		[pboard declareTypes:[NSArray arrayWithObject:postsOutlineViewRowType] owner:self];
+		[pboard setData:data forType:postsOutlineViewRowType];
+	}
+	return YES;
+}
+
+@end

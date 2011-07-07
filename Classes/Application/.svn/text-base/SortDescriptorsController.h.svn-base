@@ -1,0 +1,45 @@
+//
+//  SortDescriptorsController.h
+//  Ges
+//
+//  Created by NeoJF on 23/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+
+
+@interface SortDescriptorsController : NSObject {
+	NSArray* accountsSortDescriptors;
+	NSArray* modesSortDescriptors;
+	NSArray* operationsSortDescriptors;
+	NSArray* typesSortDescriptors;
+}
+
+/*
+ * Life cycle
+ */
+- (id)init;
+- (void)dealloc;
+
+/*
+ * KVO
+ */
+- (NSArray*)accountsSortDescriptors;
+- (NSArray*)defaultAccountsSortDescriptors;
+- (NSArray*)modesSortDescriptors;
+- (NSArray*)defaultModesSortDescriptors;
+- (NSArray*)operationsSortDescriptors;
+- (NSArray*)defaultOperationsSortDescriptors;
+- (NSArray*)typesSortDescriptors;
+- (NSArray*)defaultTypesSortDescriptors;
+
+/*
+ * KVC
+ */
+//- (void)setAccountsSortDescriptors:(NSArray*)sortDescriptors;
+//- (void)setModesSortDescriptors:(NSArray*)sortDescriptors;
+- (void)setOperationsSortDescriptors:(NSArray*)sortDescriptors;
+//- (void)setTypesSortDescriptors:(NSArray*)sortDescriptors;
+
+@end

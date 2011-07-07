@@ -1,0 +1,155 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {modesPopUpButtonSelected = id; modesTableViewClicked = id; }; 
+            CLASS = AvailableModesController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = RChArrayController; 
+                categoriesEditionAccountsTableView = NSTableView; 
+                categoriesEditionModesTableView = NSTableView; 
+                document = MyDocument; 
+                operationEditionAccountsPopUpButton = NSPopUpButton; 
+                operationEditionModesPopUpButton = NSPopUpButton; 
+                operationModesArrayController = RChArrayController; 
+                operationsArrayController = RChArrayController; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {browserAction = id; datePickerAction = id; }; 
+            CLASS = DateFilterBrowserDelegate; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                browser = NSBrowser; 
+                document = MyDocument; 
+                filterController = FilterController; 
+                operationsArrayController = NSArrayController; 
+                periodFilterTabView = NSTabView; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
+                categorySelectAllButton = id; 
+                categorySelectNoneButton = id; 
+                categoryTypePopUpButtonAction = id; 
+                dateTypePopUpButtonAction = id; 
+            }; 
+            CLASS = FilterController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = NSArrayController; 
+                browserDelegate = id; 
+                categoryTabView = NSTabView; 
+                categoryTypePopUpButton = NSPopUpButton; 
+                dateTabView = NSTabView; 
+                dateTypePopUpButton = NSPopUpButton; 
+                endDatePicker = NSDatePicker; 
+                operationModesArrayController = NSArrayController; 
+                operationTypesArrayController = NSArrayController; 
+                startDatePicker = NSDatePicker; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {setFilterStateButtonAction = id; }; 
+            CLASS = FilterGUIController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                modesArrayController = RChArrayController; 
+                modesCheckAllButton = NSButton; 
+                modesCheckNoneButton = NSButton; 
+                postsArrayController = RChArrayController; 
+                typesArrayController = RChArrayController; 
+                typesCheckAllButton = NSButton; 
+                typesCheckNoneButton = NSButton; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {"" = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = MainTabViewDelegate; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {document = MyDocument; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
+                addOperation = id; 
+                addOperationNegative = id; 
+                addOperationPositive = id; 
+                delete = id; 
+                openDocumentProperties = id; 
+                operationDatePickerAction = id; 
+                propertyEdited = id; 
+                removeOperation = id; 
+            }; 
+            CLASS = MyDocument; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = RChArrayController; 
+                accountsBalanceTextField = NSTextField; 
+                editionValueTextField = NSTextField; 
+                filterController = NewFilterController; 
+                filterDrawer = NSDrawer; 
+                filterPointedStateSelectorView = PointedStateSelectorView; 
+                mainWindowBox = NSBox; 
+                operationListView = NSView; 
+                operationModesArrayController = RChArrayController; 
+                operationTypesArrayController = RChArrayController; 
+                operationsArrayController = RChArrayController; 
+                pointedStateSelectorView = PointedStateSelectorView; 
+                postsArrayController = RChArrayController; 
+                selectedOperationAvailableModesArrayController = RChArrayController; 
+                toolbarSearchField = NSSearchField; 
+                typesOfPostArrayController = RChArrayController; 
+            }; 
+            SUPERCLASS = NSPersistentDocument; 
+        }, 
+        {CLASS = NSDatePicker; LANGUAGE = ObjC; SUPERCLASS = NSControl; }, 
+        {CLASS = NSPersistentDocument; LANGUAGE = ObjC; SUPERCLASS = NSDocument; }, 
+        {CLASS = NSSegmentedControl; LANGUAGE = ObjC; SUPERCLASS = NSControl; }, 
+        {
+            CLASS = NewFilterController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = RChArrayController; 
+                operationsArrayController = RChArrayController; 
+                typesArrayController = RChArrayController; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = PointedStateSelectorView; LANGUAGE = ObjC; SUPERCLASS = NSControl; }, 
+        {
+            ACTIONS = {popUpAction = id; }; 
+            CLASS = QuickAccountFilterPopUpController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = NSArrayController; 
+                quickAccountFilterPopUpButton = NSPopUpButton; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = RChArrayController; LANGUAGE = ObjC; SUPERCLASS = NSArrayController; }, 
+        {CLASS = RapidPeriodFilterController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = SortDescriptorsController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = StatisticsTypesTableViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                document = NSPersistentDocument; 
+                filterController = FilterController; 
+                operationTypesArrayController = NSArrayController; 
+                statisticsTypesTableView = NSTableView; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}

@@ -1,0 +1,223 @@
+//  MyDocument.h
+//  Ges
+//
+//  Created by NeoJF on 17/07/05.
+//  Copyright __MyCompanyName__ 2005 . All rights reserved.
+
+
+#import <Cocoa/Cocoa.h>
+
+// Debug
+#import "DebugDefines.h"
+
+// Constants
+#import "DocumentConstants.h"
+#import "ModelConstants.h"
+
+#import "DocumentToolbar.h"
+#import "MainTabViewDelegate.h"
+#import "NibOwner.h"
+#import "NibViewController.h"
+#import "NibWindowController.h"
+#import "FilterController.h"
+#import "QuickAccountFilterPopUpController.h"
+#import "MainTabViewDelegate.h"
+#import "PointedStateSelectorView.h"
+#import "RChArrayController.h"
+
+
+#ifndef BENCHMARK_ALL
+//#define MY_DOCUMENT_BENCHMARK
+#endif
+
+#ifndef TRACE_ALL
+//#define MY_DOCUMENT_TRACE_DATA
+//#define MY_DOCUMENT_TRACE_KVO
+//#define MY_DOCUMENT_TRACE_LIFE_CYCLE
+#endif
+
+
+/*
+ * Constants
+ */
+
+// Alert context info
+static NSString*	alertContextInfoConfigurationNeeded = @"alertConfigurationNeeded";
+static NSString*	AlertContextInfoAccountSelectedModeNotAvailable = @"alertAccountSelectedModeNotAvailable";
+
+// Notification names
+static NSString* DocumentDidBecomeMainNotificationName = @"DocumentDidBecomeMain";
+static NSString* DocumentDidResignMainNotificationName = @"DocumentDidResignMain";
+
+// GUI controls tags
+#define	CONTROL_TAG_EDITION_ACCOUNT		0101
+#define	CONTROL_TAG_EDITION_MODE		0102
+#define	CONTROL_TAG_EDITION_TYPE		0103
+
+
+/*
+ * Class declaration
+ */
+
+@class DocumentPropertiesController;
+@class PointedStateSelectorView;
+
+
+@interface MyDocument : NSPersistentDocument <NibOwner> {
+
+	/*
+	 * Array controllers
+	 */
+	
+	// Entities array controllers
+	IBOutlet RChArrayController*	accountsArrayController;
+	IBOutlet RChArrayController*	operationsArrayController;
+	IBOutlet RChArrayController*	operationModesArrayController;
+	IBOutlet RChArrayController*	operationTypesArrayController;
+	IBOutlet RChArrayController*	postsArrayController;
+	
+	// Dependent set array controllers
+	IBOutlet RChArrayController* selectedOperationAvailableModesArrayController;
+	
+	/*
+	 * Other controllers
+	 */
+	IBOutlet FilterController*					filterController;
+	IBOutlet QuickAccountFilterPopUpController*	quickAccountFilterPopUpController;
+	IBOutlet MainTabViewDelegate*				mainTabViewDelegate;
+	
+	/*
+	 * Other nib owners.
+	 */
+	NSObject <NibWindowController>*			documentPropertiesController;
+	
+	/*
+	 * GUI elements
+	 */
+	IBOutlet NSDrawer*					filterDrawer;
+	IBOutlet NSTextField*				editionValueTextField;
+	IBOutlet PointedStateSelectorView*	pointedStateSelectorView;
+	IBOutlet PointedStateSelectorView*	filterPointedStateSelectorView;
+		
+	/*
+	 * Toolbar
+	 */
+	NSToolbar*				toolbar;
+	NSPopUpButton*			toolbarDisplayModeSelectionPopUpButton;
+	IBOutlet NSSearchField*	toolbarSearchField;
+	
+	/*
+	 * Internal variables
+	 */
+	
+	// Data
+	NSMutableDictionary*	databaseInfo;
+	int						documentLoadingLevel;
+	
+	// KVO options compensation
+	NSManagedObject*		selectionAccountLastValue;
+	NSManagedObject*		selectionModeLastValue;
+	NSManagedObject*		selectionTypeLastValue;
+	
+	// Misc
+	NSTimer*				operationsRearrangingTimer;
+}
+
+
+/*
+ * Life cycle
+ */
+- (id)init;
+- (void)awakeFromNib;
+- (void)removeObservers;
+
+
+/*
+ * Data
+ */
+
+// IBActions
+- (IBAction)addOperation:(id)sender;
+- (IBAction)addOperationPositive:(id)sender;
+- (IBAction)addOperationNegative:(id)sender;
+- (IBAction)removeOperation:(id)sender;
+
+// Other
+- (void)persistentStoreCoordinatorStoresDidChange:(NSNotification*)aNotification;
+- (void)documentDataLoadedActions;
+- (void)addOperation;
+
+- (IBAction)operationDatePickerAction:(id)sender;
+- (void)rearrangeOperationsOnTimer:(NSTimer*)aTimer;
+
+
+/*
+ * KVO: management
+ */
+
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context;
+
+
+/*
+ * Delegate methods
+ */
+
+// NSWindow
+- (void)windowWillClose:(NSNotification*)aNotification;
+
+
+/*
+ * IBActions
+ */
+- (IBAction)delete:(id)sender;
+- (IBAction)openDocumentProperties:(id)sender;
+- (IBAction)propertyEdited:(id)sender;
+
+
+/*
+ * Accessors
+ */
+- (NSArray *)arrangedOperations;
+- (FilterController*)filterController;
+- (RChArrayController*)operationsArrayController;
+- (QuickAccountFilterPopUpController*)quickAccountFilterPopUpController;
+
+// Other nib owners
+- (id <NibWindowController>)documentPropertiesController;
+
+
+/*
+ * Dependences for document properties
+ */
+- (void)addAccountToSelection:(NSManagedObject*)account;
+- (void)addModeToSelection:(NSManagedObject*)mode;
+- (void)addTypeToSelection:(NSManagedObject*)type;
+
+
+/*
+ * <NibOwner>
+ */
+- (NSArray*)accountsArrayControllers;
+- (NSArray*)modesArrayControllers;
+- (NSArray*)operationsArrayControllers;
+- (NSArray*)typesArrayControllers;
+
+/*
+ * All nibs array controllers
+ */
+- (NSArray*)allNibsAccountsArrayControllers;
+- (NSArray*)allNibsModesArrayControllers;
+- (NSArray*)allNibsOperationsArrayControllers;
+- (NSArray*)allNibsTypesArrayControllers;
+
+@end
+
+
+@interface MyDocument(Toolbar)
+
+- (void)setupToolbarForWindow:(NSWindow*)aWindow;
+- (void)toggleToolbar;
+- (void)customizeToolbar;
+- (NSToolbar*)toolbar;
+
+@end

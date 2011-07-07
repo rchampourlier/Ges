@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Resources/Pictures"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="Add_32x32.tiff"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="33a76b5ff86183fbcd31bc295ccd7771"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:10.000000Z"/>
+<entry
+   committed-rev="1"
+   name="Warning_10x10.png"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="6e8395051fc64c978cd8e434ddd33331"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:10.000000Z"/>
+<entry
+   name="TableView"
+   kind="dir"/>
+<entry
+   name="PointedStateSelector"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="Selected_10x10.png"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="225d42b2c02fc27f3cbb2e0cfd13f403"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:10.000000Z"/>
+<entry
+   committed-rev="1"
+   name="Configure_32x32.png"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="77b98424059442b7dcee621441741681"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:10.000000Z"/>
+<entry
+   committed-rev="1"
+   name="Remove_32x32.tiff"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="fb923017963c21abc077c9bf51c6fe3e"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:10.000000Z"/>
+<entry
+   name="Posts"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="Barred_10x10.png"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="00a5096fea710d13459998a3e7f1ad82"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+<entry
+   committed-rev="1"
+   name="Drawer_32x32.tiff"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="c54b8bd6ce112bbea5ffd1539c3cc4d5"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+<entry
+   committed-rev="1"
+   name="Barred_64x64.png"
+   text-time="2007-01-06T13:50:11.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="c380048ca2002c7353327b88b2cd1b0c"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:11.000000Z"/>
+</wc-entries>

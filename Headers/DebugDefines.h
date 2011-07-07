@@ -1,0 +1,79 @@
+/*
+ * This files allows rapidly enabling traces and debug information output
+ * to console for all source files thanks to a single define.
+ * 
+ * The following defines are possible:
+ *	- TRACE_ALL: activates all debug and informational traces.
+ *	- BENCHMARK_ALL: activates all benchmark traces.
+ */
+
+
+#define TRACE_ALL_L1
+
+#ifdef TRACE_ALL
+#define TRACE_ALL_L4
+#endif
+
+#ifdef TRACE_ALL_L2
+#define TRACE_ALL_L1
+#define TRACE_ALL_L2
+#endif
+
+#ifdef TRACE_ALL_L3
+#define TRACE_ALL_L1
+#define TRACE_ALL_L2
+#define TRACE_ALL_L3
+#endif
+
+#ifdef TRACE_ALL_L4
+#define TRACE_ALL_L1
+#define TRACE_ALL_L2
+#define TRACE_ALL_L3
+#define TRACE_ALL_L4
+#endif
+
+#define CSTRING cStringUsingEncoding:NSUTF8StringEncoding
+
+//#define TRACE_NOTIFICATIONS
+//#define BENCHMARK_ALL
+
+#ifdef TRACE_ALL
+
+	#define ACCOUNTS_BALANCE_CONTROLLER_TRACE_METHODS
+	
+	#define DOCUMENT_PROPERTIES_CONTROLLER_TRACE_METHODS
+	
+	#define EDITION_SELECTION_SOURCE_LIST_CONTROLLER_TRACE_METHODS
+	#define EDITION_SELECTION_SOURCE_LIST_CONTROLLER_TRACE_METHODS_END
+
+	#define MY_DOCUMENT_CONTROLLER_TRACE_METHODS
+
+	#define MY_DOCUMENT_TRACE_METHODS
+	#define MY_DOCUMENT_TRACE_DATA
+	#define MY_DOCUMENT_TRACE_KVO
+	#define MY_DOCUMENT_TRACE_LIFE_CYCLE
+	#define MY_DOCUMENT_TRACE_OTHER
+
+	#define OPERATION_MANAGED_OBJECT_TRACE_METHODS
+	#define OPERATION_MANAGED_OBJECT_LIFE_CYCLE
+
+	#define PROPERTIES_POSTS_TYPES_OUTLINE_VIEW_DRAG_AND_DROP_CONTROLLER_TRACE
+
+	#define STATISTICS_TEXT_FIELD_TRACE_METHODS
+
+#endif
+
+#ifdef TRACE_NOTIFICATIONS
+
+	#define ACCOUNT_MANAGED_OBJECT_TRACE_NOTIFICATIONS
+	#define FILTER_CONTROLLER_TRACE_NOTIFICATIONS
+	#define POST_MANAGED_OBJECT_TRACE_NOTIFICATIONS
+	#define TYPE_MANAGED_OBJECT_TRACE_NOTIFICATIONS
+
+#endif
+
+#ifdef BENCHMARK_ALL
+
+	#define MY_DOCUMENT_BENCHMARK
+
+#endif

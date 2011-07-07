@@ -1,0 +1,792 @@
+/*  MyDocument.m
+ *  Ges
+ *
+ *  Created by Romain Champourlier on 17/07/05. All rights reserved.
+ */
+
+/**
+ * Override of the NSPersistentDocument class for the specific document managed by this
+ * application.
+ *
+ * Delegate for:
+ *	- the main window.
+ *
+ * Explanations on : documentLoadingLevel.
+ * The documentLoadingLevel value is used to determine when the data (managed through CoreData)
+ * finished loading. The NSArrayControllers containing the data are observed by the document
+ * and when their "content" value is changed, we can assume the data has been loaded. The
+ * documentLoadingLevel is used to determine how many of the different array controllers are
+ * going to receive data - since some of them could be empty, thus not raising the observing
+ * method. This value is saved in the store's metadata to be available before the document
+ * begins to load the data from the store.
+ */
+
+
+#import "MyDocument.h"
+
+
+static NSString* databaseInfoPersistentStoreMetadataKey = @"DatabaseInfo";
+static NSString* softwareVersionPersistentStoreMetadataKey = @"SoftwareVersion";
+static NSString* currentVersion = @"0.3a";
+
+static NSString* databaseInfoNumberOfAccountsKey = @"numberOfAccounts";
+static NSString* databaseInfoNumberOfOperationsKey = @"numberOfOperations";
+static NSString* databaseInfoNumberOfOperationModesKey = @"numberOfOperationModes";
+static NSString* databaseInfoNumberOfOperationTypesKey = @"numberOfOperationTypes";
+
+@implementation MyDocument
+
+
+#pragma mark -
+#pragma mark === Object's life ===
+
+- (id)init {
+	self = [super init];
+	if (self != nil) {
+		documentLoadingLevel = 0;
+		operationsRearrangingTimer = nil;
+		
+		/*
+		 * These 3 variables are used to save the last values of
+		 * 'selection.account', 'selection.mode' and 'selection.type'
+		 * observed properties of the 'operationsArrayController' since
+		 * options of the KVO observeValue... method are unavailable for
+		 * the NSArrayController class.
+		 */
+		selectionAccountLastValue = nil;
+		selectionModeLastValue = nil;
+		selectionTypeLastValue = nil;
+		
+		// External content controllers
+		documentPropertiesController = nil;
+	}
+	return self;
+}
+
+- (void)dealloc {
+#ifdef MY_DOCUMENT_TRACE_LIFE_CYCLE
+	printf("[MyDocument dealloc]\n");
+#endif
+	
+	[super dealloc];
+	
+#ifdef MY_DOCUMENT_TRACE_LIFE_CYCLE
+	printf("[MyDocument dealloc] END\n");
+#endif
+}
+
+- (void)awakeFromNib {
+#ifdef MY_DOCUMENT_TRACE_LIFE_CYCLE
+	printf("[MyDocument awakeFromNib]\n");
+#endif
+	
+	/*
+	 * Loads the 'databaseInfo' metadata from the document, or create it if it
+	 * is a new document.
+	 *
+	 * This metadata contains the number of entities present in the database, what
+	 * allows detecting when the document finished loading the data from the file;
+	 * this is done through observation of array controller's 'content' properties
+	 * - see the observeValueForKeyPath:ofObject:change:context method.
+	 */
+	NSPersistentStoreCoordinator* psc = [[self managedObjectContext] persistentStoreCoordinator];
+	NSArray* pss = [psc persistentStores];
+	if ([pss count] == 0) {
+		// It is a new document.
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(persistentStoreCoordinatorStoresDidChange:) name:@"NSPersistentStoreCoordinatorStoresDidChangeNotification" object:nil];
+		databaseInfo = [[NSMutableDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0], databaseInfoNumberOfAccountsKey, [NSNumber numberWithInt:0], databaseInfoNumberOfOperationsKey, [NSNumber numberWithInt:0], databaseInfoNumberOfOperationModesKey, [NSNumber numberWithInt:0],  databaseInfoNumberOfOperationTypesKey, nil] retain];
+		[self documentDataLoadedActions];
+	}
+	else {
+		id ps = [pss objectAtIndex:0];
+		NSDictionary* storeMetadata = [psc metadataForPersistentStore:ps];
+		databaseInfo = [[storeMetadata valueForKey:databaseInfoPersistentStoreMetadataKey] retain];
+	}
+	
+	/*
+	 * Sets the sort descriptors for entities' array controllers.
+	 * All entities will appear sorted by 'priority' in any view using the
+	 * array controller's 'arrangedObjects' property.
+	 */
+	NSSortDescriptor* sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES];
+	NSArray* sortDescriptorsArray = [NSArray arrayWithObject:sortDescriptor];
+	[accountsArrayController setSortDescriptors:sortDescriptorsArray];
+	[operationModesArrayController setSortDescriptors:sortDescriptorsArray];
+	[operationTypesArrayController setSortDescriptors:sortDescriptorsArray];
+	[selectedOperationAvailableModesArrayController setSortDescriptors:sortDescriptorsArray];
+		
+#ifdef MY_DOCUMENT_TRACE_DATA
+	printf("DATA\tdatabaseInfo operations:%d accounts:%d modes:%d types:%d\n", [[databaseInfo valueForKey:databaseInfoNumberOfOperationsKey] intValue], [[databaseInfo valueForKey:databaseInfoNumberOfAccountsKey] intValue], [[databaseInfo valueForKey:databaseInfoNumberOfOperationModesKey] intValue], [[databaseInfo valueForKey:databaseInfoNumberOfOperationTypesKey] intValue]);
+#endif
+}
+
+- (void)removeObservers {
+#ifdef MY_DOCUMENT_TRACE_LIFE_CYCLE
+	printf("[MyDocument removeObservers]\n");
+#endif
+	
+	[operationsArrayController removeObserver:self forKeyPath:@"content"];
+	[accountsArrayController removeObserver:self forKeyPath:@"content"];
+	[operationModesArrayController removeObserver:self forKeyPath:@"content"];
+	[operationTypesArrayController removeObserver:self forKeyPath:@"content"];
+}
+
+#pragma mark -
+#pragma mark === Data ===
+
+/*
+ * Called when there is a change in the persistent store coordinator of the document. Since
+ * we registered for it after the creation of a new document (see the awakeFromNib method),
+ * this should only happen when the new document is saved the first time. This allows us
+ * to add the needed metadata to the store - see class information to know why this metadata
+ * is so important.
+ */
+- (void)persistentStoreCoordinatorStoresDidChange:(NSNotification*)aNotification {
+//#ifdef MY_DOCUMENT_TRACE_DATA
+	printf("[MyDocument persistentStoreCoordinatorStoresDidChange:]\n");
+//#endif
+	
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:@"NSPersistentStoreCoordinatorStoresDidChangeNotification" object:nil];
+	NSPersistentStoreCoordinator* psc = [[self managedObjectContext] persistentStoreCoordinator];
+	NSArray* pss = [psc persistentStores];
+	id ps = [pss objectAtIndex:0];
+	NSDictionary* storeMetadata = [NSDictionary dictionaryWithObjectsAndKeys:currentVersion, softwareVersionPersistentStoreMetadataKey, databaseInfo, databaseInfoPersistentStoreMetadataKey, nil];
+	[psc setMetadata:storeMetadata forPersistentStore:ps];
+	
+#ifdef MY_DOCUMENT_TRACE_DATA
+	printf("DATA\tdatabaseInfo operations:%d accounts:%d modes:%d types:%d\n", [[databaseInfo valueForKey:databaseInfoNumberOfOperationsKey] intValue], [[databaseInfo valueForKey:databaseInfoNumberOfAccountsKey] intValue], [[databaseInfo valueForKey:databaseInfoNumberOfOperationModesKey] intValue], [[databaseInfo valueForKey:databaseInfoNumberOfOperationTypesKey] intValue]);
+#endif
+}
+
+/* 
+ * The data just finished loading. We alert filterController of it and we add new observing
+ * conditions to this document.
+ */
+- (void)documentDataLoadedActions {
+#ifdef MY_DOCUMENT_TRACE_DATA
+	printf("[MyDocument documentDataLoadedActions]\n");
+#endif
+	
+	documentLoadingLevel--;
+
+	// Initially, all accounts, modes and types have to be selected (no filter).
+	[accountsArrayController setSelectedObjects:[accountsArrayController content]];
+	[operationModesArrayController setSelectedObjects:[operationModesArrayController content]];
+	[operationTypesArrayController setSelectedObjects:[operationTypesArrayController content]];
+
+#ifdef MY_DOCUMENT_TRACE_DATA
+	printf("[MyDocument documentDataLoadedActions] END\n");
+#endif
+}
+
+- (IBAction)addOperation:(id)sender {
+#ifdef MY_DOCUMENT_BENCHMARK
+	NSDate* start = [NSDate date];
+#endif
+	
+	if ([[accountsArrayController content] count] == 0
+		|| [[operationModesArrayController content] count] == 0
+		|| [[operationTypesArrayController content] count] == 0) {
+		/*
+		 * No operation can be added, there is lacking a category: account, mode or
+		 * type.
+		 */
+		
+		NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+		[alert setMessageText:NSLocalizedString(@"configurationNeededAlertMessage", nil)];
+		[alert setInformativeText:NSLocalizedString(@"configurationNeededAlertInfo", nil)];
+		[alert addButtonWithTitle:NSLocalizedString(@"configurationNeededAlertButtonGoto", nil)];
+		[alert addButtonWithTitle:NSLocalizedString(@"configurationNeededAlertButtonCancel", nil)];
+		[alert setIcon:[[NSImage alloc] initByReferencingFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"Barred_64x64.png"]]];
+		[alert beginSheetModalForWindow:[self windowForSheet] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:alertContextInfoConfigurationNeeded];
+	}
+	
+	else {
+		[self addOperation];
+		// TODO: May be useful to find something faster (approx. 1 second to gain)
+		//[operationsArrayController rearrangeObjects];
+	}
+	
+#ifdef MY_DOCUMENT_BENCHMARK
+	printf("[MyDocument addOperation:] %lfs\n", [[NSDate date] timeIntervalSinceDate:start]);
+#endif
+}
+
+/**
+ * Adds a positive operation.
+ *
+ * Calls the 'addOperation:' method. Then sets the value of the operation to
+ * a positive value and selects the value's text.
+ */
+- (IBAction)addOperationPositive:(id)sender {
+	[self addOperation:sender];
+	[operationsArrayController setValue:[NSDecimalNumber numberWithInt:10] forKeyPath:@"selection.value"];
+	[editionValueTextField selectText:self];
+}
+
+/**
+ * Adds a negative operation.
+ *
+ * Calls the 'addOperation:' method. Then sets the value of the operation to a
+ * negative value and selects the text after the sign.
+ */
+- (IBAction)addOperationNegative:(id)sender {
+	[self addOperation:sender];
+	[operationsArrayController setValue:[NSDecimalNumber numberWithInt:-10] forKeyPath:@"selection.value"];
+	[editionValueTextField selectText:self];
+	
+	// Selecting text after minus sign.
+	NSText* textEditor = [[self windowForSheet] fieldEditor:YES forObject:editionValueTextField];
+	NSRange range = {1, 5};
+	[textEditor setSelectedRange:range];
+}
+
+- (void)addOperation {
+#ifdef MY_DOCUMENT_BENCHMARK
+	NSDate* start = [NSDate date];
+#endif
+	
+	NSManagedObjectContext* managedObjectContext = [self managedObjectContext];
+	NSCalendarDate* today = [NSCalendarDate date];
+	NSCalendarDate* todayMidday = [NSCalendarDate dateWithYear:[today yearOfCommonEra] month:[today monthOfYear] day:[today dayOfMonth] hour:12 minute:0 second:0 timeZone:nil];
+	NSManagedObject* newOperation = [NSEntityDescription insertNewObjectForEntityForName:EntityNameOperation inManagedObjectContext:managedObjectContext];
+	[newOperation setValue:NSLocalizedString(@"operationDefaultDescription", nil) forKey:@"operationDescription"];
+	[newOperation setValue:todayMidday forKey:@"operationDate"];
+	
+	NSManagedObject *account = [[accountsArrayController selectedObjects] objectAtIndex:0];
+	[newOperation setValue:account forKey:@"account"];
+	
+	NSArray* selectedModes = [operationModesArrayController selectedObjects];
+	NSSet* availableModes = [account valueForKey:@"availableModes"];
+	NSManagedObject *mode = [selectedModes firstObjectCommonWithArray:[availableModes allObjects]];
+	[newOperation setValue:mode forKey:@"mode"];
+	if ([mode valueForKey:@"allowsValueDate"]) {
+		// Mode allows value dates, setting value date to current day.
+		[newOperation setValue:todayMidday forKey:@"valueDate"];
+	}
+	
+	[newOperation setValue:[[operationTypesArrayController mutableArrayValueForKey:@"selectedObjects"] objectAtIndex:0] forKey:@"type"];
+	[managedObjectContext processPendingChanges];
+	[operationsArrayController setSelectedObjects:[NSArray arrayWithObject:newOperation]];
+
+#ifdef MY_DOCUMENT_BENCHMARK
+	printf("[MyDocument addOperation] %lfs\n", [[NSDate date] timeIntervalSinceDate:start]);
+#endif
+}
+
+- (IBAction)removeOperation:(id)sender {
+	id operation = [operationsArrayController selectedObject];
+	id account = [[operationsArrayController selectedObject] valueForKey:@"account"];
+	[[account mutableSetValueForKey:@"operations"] removeObject:operation];
+	
+	[[self managedObjectContext] deleteObject:[operationsArrayController selectedObject]];
+	[[self managedObjectContext] processPendingChanges];
+}
+
+
+#pragma mark -
+#pragma mark === Window controller associated methods ===
+
+/**
+ * Returns the name of the nib file associated to this document class.
+ */
+- (NSString *)windowNibName {
+    return @"MyDocument";
+}
+
+/**
+ * Performs interface initialization once it has been loaded from nib.
+ */
+- (void)windowControllerDidLoadNib:(NSWindowController *)windowController {
+#ifdef MY_DOCUMENT_TRACE_LIFE_CYCLE
+	printf("[MyDocument windowControllerDidLoadNib:]\n");
+#endif
+	
+    [super windowControllerDidLoadNib:windowController];
+	[self setupToolbarForWindow:[windowController window]];
+	
+	// Manually setting some bindings
+	
+	[pointedStateSelectorView bind:@"selectedState" toObject:operationsArrayController withKeyPath:@"selection.pointedState" options:nil];
+	NSDictionary *pointedStateEnabledOptions = [NSDictionary dictionaryWithObject:@"ArrayNotEmpty" forKey:NSValueTransformerNameBindingOption];
+	[pointedStateSelectorView bind:@"enabled" toObject:operationsArrayController withKeyPath:@"selectedObjects" options:pointedStateEnabledOptions];
+	
+	[filterPointedStateSelectorView bind:@"selectedState" toObject:filterController withKeyPath:@"pointedState" options:nil];
+	[filterPointedStateSelectorView setSelectedState:UNSET|ENABLED|DISABLED];
+
+	/*
+	 * Adding observers
+	 * TODO: Indicate for what use.
+	 */
+	[operationsArrayController addObserver:self forKeyPath:@"content" options:nil context:nil];
+	[accountsArrayController addObserver:self forKeyPath:@"content" options:nil context:nil];
+	[operationModesArrayController addObserver:self forKeyPath:@"content" options:nil context:nil];
+	[operationTypesArrayController addObserver:self forKeyPath:@"content" options:nil context:nil];
+
+	/*
+	 * Determine which types of information are available in the document and establishes
+	 * the "documentLoadingLevel" which enables detecting when the document finished
+	 * loading its data.
+	 */
+	if ([[databaseInfo valueForKey:databaseInfoNumberOfOperationsKey] intValue] > 0) {
+		documentLoadingLevel++;
+	}
+	if ([[databaseInfo valueForKey:databaseInfoNumberOfAccountsKey] intValue] > 0) {
+		documentLoadingLevel++;
+	}
+	if ([[databaseInfo valueForKey:databaseInfoNumberOfOperationModesKey] intValue] > 0) {
+		documentLoadingLevel++;
+	}
+	if ([[databaseInfo valueForKey:databaseInfoNumberOfOperationTypesKey] intValue] > 0) {
+		documentLoadingLevel++;
+	}
+	
+	[filterPointedStateSelectorView setAllowingMultipleSelection:YES];
+	[filterPointedStateSelectorView setEnabled:YES];
+}
+
+- (NSError *)willPresentError:(NSError *)inError 
+{
+	// The error is a Core Data validation error if its domain is NSCocoaErrorDomain and it is between
+	// the minimum and maximum for Core Data validation error codes.
+	if ([[inError domain] isEqualToString:NSCocoaErrorDomain]) {
+		int errorCode = [inError code];
+		if (errorCode >= NSValidationErrorMinimum && errorCode <= NSValidationErrorMaximum) {
+			
+			// If there are multiple validation errors, inError will be a NSValidationMultipleErrorsError
+			// and all the validation errors will be in an array in the userInfo dictionary for key NSDetailedErrorsKey
+			id detailedErrors = [[inError userInfo] objectForKey:NSDetailedErrorsKey];
+			if (detailedErrors != nil) {
+				
+				// For this example we are only presenting the error messages for up to 3 validation errors at a time.
+				// We are simply passing the NSLocalizedDescription for each error to the user, but one could instead
+				// construct a customized, user-friendly error here. The error codes and userInfo dictionary
+				// keys for validation errors are listed in <CoreData/CoreDataErrors.h>.
+				
+				unsigned numErrors = [detailedErrors count];							
+				NSMutableString *errorString = [NSMutableString stringWithFormat:@"%u validation errors have occurred", numErrors];
+				if (numErrors > 3)
+					[errorString appendFormat:@".\nThe first 3 are:\n"];
+				else
+					[errorString appendFormat:@":\n"];
+				
+				unsigned i;
+				for (i = 0; i < (numErrors > 3 ? 3 : numErrors); ++i) {
+					[errorString appendFormat:@"%@\n", [[detailedErrors objectAtIndex:i] localizedDescription]];
+				}
+				
+				NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[inError userInfo]];
+				[userInfo setObject:errorString forKey:NSLocalizedDescriptionKey];
+				
+				return [NSError errorWithDomain:[inError domain] code:[inError code] userInfo:userInfo];
+				
+			} else {
+				// As there is only one validation error, we are returning it verbatim to the user.
+				return inError;
+			}
+		}
+	}
+	return inError;
+}
+
+
+#pragma mark -
+#pragma mark === KVO management ===
+
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context {
+#ifdef MY_DOCUMENT_TRACE_KVO
+	char* objectName;
+	if (object == operationsArrayController) {
+		objectName = "operationsArrayController";
+	}
+	else if (object == accountsArrayController) {
+		objectName = "accountsArrayController";
+	}
+	else if (object == operationModesArrayController) {
+		objectName = "operationModesArrayController";
+	}
+	else if (object == operationTypesArrayController) {
+		objectName = "operationTypesArrayController";
+	}
+	printf("[MyDocument observeValueForKeyPath:%s ofObject:%s]\n", [keyPath cString], objectName);
+#endif
+	
+	if (documentLoadingLevel != -1) {
+		/*
+		 * This first part in the KVO observeValue... method is used to determine
+		 * what data have been loaded from the file and when the document finished
+		 * loading.
+		 * This is done by detecting the KVO notifications on update of the 4
+		 * array controllers controlling the document's data. The property
+		 * 'content' is updated when the array controller has been loaded.
+		 */
+		if (object == operationsArrayController) {
+			documentLoadingLevel--;
+		}
+		else if (object == accountsArrayController) {
+			documentLoadingLevel--;
+		}
+		else if (object == operationModesArrayController) {
+			documentLoadingLevel--;
+		}
+		else if (object == operationTypesArrayController) {
+			documentLoadingLevel--;
+		}
+		
+		if (documentLoadingLevel == 0) {
+			// All data loaded.
+			[self documentDataLoadedActions];
+		}
+	}
+	
+	else {
+		/*
+		 * This second part of the method is used for the rest of the execution.
+		 */
+		
+		if (object == operationsArrayController) {
+						
+			if ([keyPath isEqualToString:@"content"]) {
+				// Update the database info.
+				[databaseInfo setValue:[NSNumber numberWithInt:[[operationsArrayController content] count]] forKey:databaseInfoNumberOfOperationsKey];
+			}
+		}
+		
+		else if (object == operationModesArrayController && [keyPath isEqualToString:@"content"]) {
+			// Update the database info.
+			[databaseInfo setValue:[NSNumber numberWithInt:[[operationModesArrayController content] count]] forKey:databaseInfoNumberOfOperationModesKey];	
+		}
+		
+		else if (object == operationTypesArrayController && [keyPath isEqualToString:@"content"]) {
+			// Update the database info.
+			[databaseInfo setValue:[NSNumber numberWithInt:[[operationTypesArrayController content] count]] forKey:databaseInfoNumberOfOperationTypesKey];
+		}
+		
+		else if (object == accountsArrayController && [keyPath isEqualToString:@"content"]) {
+			// Update the database info.
+			[databaseInfo setValue:[NSNumber numberWithInt:[[accountsArrayController content] count]] forKey:databaseInfoNumberOfAccountsKey];
+		}
+	}
+#ifdef MY_DOCUMENT_TRACE_KVO
+	printf("[MyDocument observeValueForKeyPath:%s ofObject:%s END]\n", [keyPath cString], objectName);
+#endif
+}
+
+
+#pragma mark -
+#pragma mark === Interface's events handling ===
+
+/*
+ * TODO: Should use a default or a constant to specify the time interval
+ * the timer should wait before firing the rearrangement request.
+ */
+- (IBAction)operationDatePickerAction:(id)sender {
+	if (operationsRearrangingTimer == nil) {
+		operationsRearrangingTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(rearrangeOperationsOnTimer:) userInfo:nil repeats:NO];
+	}
+	else {
+		[operationsRearrangingTimer setFireDate:[[[NSDate alloc] initWithTimeIntervalSinceNow:1] autorelease]];
+	}
+}
+
+- (void)rearrangeOperationsOnTimer:(NSTimer*)aTimer {
+	operationsRearrangingTimer = nil;
+	[operationsArrayController rearrangeObjects];
+}
+
+
+#pragma mark -
+#pragma mark === Delegate methods ===
+
+/*
+ * Called when the document's window (for which the document is the delegate) is going
+ * to close.
+ * It performs the unregistration of the observers registered manually with objects of
+ * this document, to avoid deallocating objects having observers still registered.
+ */
+- (void)windowWillClose:(NSNotification*)aNotification {
+	printf("[MyDocument windowWillClose]\n");
+	//[operationModesArrayController removeObserver:self forKeyPath:@"selectedObject"];
+	[self removeObservers];
+	
+	[filterController removeObservers];
+	[quickAccountFilterPopUpController removeObservers];
+	printf("[MyDocument windowWillClose:END]\n");
+}
+
+
+#pragma mark -
+#pragma mark === IBActions ===
+
+/**
+ * Deletes the currently selected operation.
+ *
+ * This action is intended to be reached through the responders chain. For this
+ * reason, other 'delete:' methods should be available in previous responders in
+ * case other entities should be deleted.
+ */
+- (IBAction)delete:(id)sender {
+	[operationsArrayController remove:self];
+}
+
+- (IBAction)openDocumentProperties:(id)sender {
+	if (documentPropertiesController == nil) {
+		documentPropertiesController = [[DocumentPropertiesController alloc] initWithDocument:self];
+	}
+	[documentPropertiesController openWindow];
+}
+
+/**
+ * Target action of GUI controls reflecting properties of the selected operation.
+ *
+ * This action enables to perform several actions necessary when different properties
+ * are changed:
+ *	- Determine if the 'operationsArrayController' needs to be rearranged. This is
+ * for example when the edited operation can no more be accepted by the filter.
+ *	- In case the property changed is the account, determine if the mode is available
+ * for the new account. In case it is not, select another mode and display a warning
+ * message to indicate the change to the user.
+ *
+ * TODO:
+ *	- Extends this technique for all editable properties of the operation that are taken
+ * into account within the filter (dates, pointed and marked states, etc.).
+ */
+- (IBAction)propertyEdited:(id)sender {
+	switch ([sender tag]) {
+
+		case CONTROL_TAG_EDITION_ACCOUNT :
+		{
+			NSManagedObject* operation = [operationsArrayController valueForKey:@"selectedObject"];
+			NSManagedObject* account = [operationsArrayController valueForKeyPath:@"selection.account"];
+			NSManagedObject* oldMode = [operationsArrayController valueForKeyPath:@"selection.mode"];
+			if (![[account valueForKey:@"availableModes"] containsObject:oldMode]) {
+				// Current mode not available for new account.
+				
+				NSArray *selectedModes = [operationModesArrayController selectedObjects];
+				NSSet *availableModes = [account valueForKey:@"availableModes"];
+				NSManagedObject *mode = [selectedModes firstObjectCommonWithArray:[availableModes allObjects]];
+				[operation setValue:mode forKey:@"mode"];
+				
+				NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+				[alert setMessageText:[NSString stringWithFormat:NSLocalizedString(@"editionAccountSelectedModeNotAvailableAlertMessage", nil), [oldMode valueForKey:@"name"], [account valueForKey:@"name"]]];
+					[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"editionAccountSelectedModeNotAvailableAlertInfo", nil), [mode valueForKey:@"name"]]];
+				[alert addButtonWithTitle:NSLocalizedString(@"editionAccountSelectedModeNotAvailableAlertButton", nil)];
+				[alert setIcon:[[NSImage alloc] initByReferencingFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"Barred_64x64.png"]]]; // TODO: Make and use a warning icon
+				[alert beginSheetModalForWindow:[self windowForSheet] modalDelegate:nil didEndSelector:nil contextInfo:AlertContextInfoAccountSelectedModeNotAvailable];
+			}
+				
+			if (![filterController managedObjectAcceptedByFilter:[operationsArrayController valueForKeyPath:@"selection.account"]]) {
+				// New account excluded from filter. Operations must be rearranged.
+				[operationsArrayController rearrangeObjects];
+			}
+			break;
+		}
+			
+		case CONTROL_TAG_EDITION_MODE :
+		{
+			if (![filterController managedObjectAcceptedByFilter:[operationsArrayController valueForKeyPath:@"selection.mode"]]) {
+				[operationsArrayController rearrangeObjects];
+			}
+			break;
+		}
+			
+		case CONTROL_TAG_EDITION_TYPE :
+		{
+			if (![filterController managedObjectAcceptedByFilter:[operationsArrayController valueForKeyPath:@"selection.type"]]) {
+				[operationsArrayController rearrangeObjects];
+			}
+			break;
+		}
+	}
+}
+
+#pragma mark -
+#pragma mark === Window's management ===
+
+- (void)windowDidBecomeMain:(NSNotification*)aNotification {
+	[[NSNotificationCenter defaultCenter] postNotificationName:DocumentDidBecomeMainNotificationName object:self];
+}
+
+- (void)windowDidResignMain:(NSNotification*)aNotification {
+	[[NSNotificationCenter defaultCenter] postNotificationName:DocumentDidResignMainNotificationName object:self];
+}
+
+- (void)alertDidEnd:(NSAlert *)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo {
+	NSString* context = (NSString*)contextInfo;
+	if ([context isEqualToString:alertContextInfoConfigurationNeeded]) {
+		if (returnCode == NSAlertFirstButtonReturn) {
+			// "Go to document's configuration" button clicked
+			[[alert window] orderOut:self];
+			[self openDocumentProperties:self];
+		}
+	}
+}
+
+- (IBAction)toggleFilterDrawer:(id)sender {
+	[filterDrawer toggle:self];
+}
+
+
+#pragma mark -
+#pragma mark === Accessors ===
+
+- (NSArray *)arrangedOperations {
+	return [operationsArrayController arrangedObjects];
+}
+
+- (id <NibWindowController>)documentPropertiesController {
+	return documentPropertiesController;
+}
+
+/**
+ * Returns the filter controller.
+ */
+- (FilterController*)filterController {
+	return filterController;
+}
+
+/**
+ * Returns the array controller for operations.
+ */
+- (RChArrayController*)operationsArrayController {
+	return operationsArrayController;
+}
+
+/**
+ * Returns the controller for the "Quick accounts filter" popup button in the
+ * main window.
+ */
+- (QuickAccountFilterPopUpController*)quickAccountFilterPopUpController {
+	return quickAccountFilterPopUpController;
+}
+
+
+#pragma mark -
+#pragma mark === Dependences for document properties ===
+
+- (void)addAccountToSelection:(NSManagedObject*)account {
+	[accountsArrayController addSelectedObjects:[NSArray arrayWithObject:account]];
+}
+
+- (void)addModeToSelection:(NSManagedObject*)mode {
+	[operationModesArrayController addSelectedObjects:[NSArray arrayWithObject:mode]];
+}
+
+- (void)addTypeToSelection:(NSManagedObject*)type {
+	[operationTypesArrayController addSelectedObjects:[NSArray arrayWithObject:type]];
+}
+
+
+#pragma mark -
+#pragma mark ===  <NibOwner> ===
+
+/**
+ * Returns an array of all array controllers managing accounts in the nib file.
+ * The array contains:
+ *	- 'accountsArrayController'.
+ */
+- (NSArray*)accountsArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:accountsArrayController];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing modes in the nib file.
+ * The array contains:
+ *	- 'operationModesArrayController',
+ *	- 'selectedOperationAvailableModesArrayController'.
+ */
+- (NSArray*)modesArrayControllers {
+	NSArray* array = [NSArray arrayWithObjects:operationModesArrayController, selectedOperationAvailableModesArrayController, nil];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing operations in the nib file.
+ * The array contains:
+ *	- 'operationsArrayController'.
+ */
+- (NSArray*)operationsArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:operationsArrayController];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing types in the nib file.
+ * The array contains:
+ *	- 'operationTypesArrayController'.
+ */
+- (NSArray*)typesArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:operationTypesArrayController];
+	return array;
+}
+
+
+/**
+ * These methods provide access to array controllers of all nib owners - classes
+ * implementing <NibOwner>.
+ *
+ * Since the document's instance can be accessed from any class, the 'MyDocument' class
+ * is used to provide access to array controllers of all nib owners which may not be
+ * accessed through their respective controllers.
+ */
+#pragma mark -
+#pragma mark === All nibs array controllers ===
+
+/*
+ * Returns array controllers for accounts entities from the following nibs:
+ *	- MyDocument,
+ *	- DocumentProperties,
+ *	- QuickStatistics.
+ */
+- (NSArray*)allNibsAccountsArrayControllers {
+	NSMutableArray* array = [NSMutableArray array];
+	[array addObjectsFromArray:[self accountsArrayControllers]];
+	[array addObjectsFromArray:[documentPropertiesController accountsArrayControllers]];
+	[array addObjectsFromArray:[[mainTabViewDelegate quickStatisticsController] accountsArrayControllers]];
+	return array;
+}
+
+/*
+ * Returns array controllers for modes entities from the following nibs:
+ *	- MyDocument,
+ *	- DocumentProperties,
+ *	- QuickStatistics.
+ */
+- (NSArray*)allNibsModesArrayControllers {
+	NSMutableArray* array = [NSMutableArray array];
+	[array addObjectsFromArray:[self modesArrayControllers]];
+	[array addObjectsFromArray:[documentPropertiesController modesArrayControllers]];
+	[array addObjectsFromArray:[[mainTabViewDelegate quickStatisticsController] modesArrayControllers]];
+	return array;
+}
+
+/*
+ * Returns array controllers for operations entities from the following nibs:
+ *	- MyDocument,
+ *	- DocumentProperties,
+ *	- QuickStatistics.
+ */
+- (NSArray*)allNibsOperationsArrayControllers {
+	NSMutableArray* array = [NSMutableArray array];
+	[array addObjectsFromArray:[self operationsArrayControllers]];
+	[array addObjectsFromArray:[documentPropertiesController operationsArrayControllers]];
+	[array addObjectsFromArray:[[mainTabViewDelegate quickStatisticsController] operationsArrayControllers]];
+	return array;
+}
+
+/*
+ * Returns array controllers for types entities from the following nibs:
+ *	- MyDocument,
+ *	- DocumentProperties,
+ *	- QuickStatistics.
+ */
+- (NSArray*)allNibsTypesArrayControllers {
+	NSMutableArray* array = [NSMutableArray array];
+	[array addObjectsFromArray:[self typesArrayControllers]];
+	[array addObjectsFromArray:[documentPropertiesController typesArrayControllers]];
+	[array addObjectsFromArray:[[mainTabViewDelegate quickStatisticsController] typesArrayControllers]];
+	return array;
+}
+
+@end

@@ -1,0 +1,47 @@
+//
+//  RChArrayController.m
+//  Ges
+//
+//  Created by NeoJF on 03/11/05.
+//  Copyright 2005 __MyCompanyName__. All rights reserved.
+//
+
+/*
+ * This class is an extension of the NSArrayController.
+ * It offers the following additionnal services :
+ *	- an alternate selection,
+ *	- directly getting the selected object.
+ */
+
+#import "RChArrayController.h"
+
+
+@implementation RChArrayController
+
+- (id)initWithCoder:(NSCoder *)decoder {
+	self = [super initWithCoder:decoder];
+	if (self != nil) {
+	}
+	return self;
+}
+
+
+#pragma mark -
+#pragma mark === Accessing objects ===
+
+/*
+ * Returns the selected object if a single object is selected,
+ * or else returns nil.
+ * Similar to selection, but returns the object itself, instead of a proxy.
+ */
+- (id)selectedObject {
+	NSIndexSet* selectionIndexes = [self selectionIndexes];
+	switch ([selectionIndexes count]) {
+		case 1 :
+			return [[self arrangedObjects] objectAtIndex:[selectionIndexes firstIndex]];
+		default :
+			return nil;
+	}
+}
+
+@end

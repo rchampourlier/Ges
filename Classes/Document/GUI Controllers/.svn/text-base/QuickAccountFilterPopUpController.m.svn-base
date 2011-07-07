@@ -1,0 +1,120 @@
+//
+//  QuickAccountFilterPopUpController.m
+//  Ges
+//
+//  Created by NeoJF on 26/10/05.
+//  Copyright 2005 __MyCompanyName__. All rights reserved.
+//
+
+#import "QuickAccountFilterPopUpController.h"
+
+
+/**
+ * This controller manages the popup button for quick account filtering.
+ *
+ * The user can select an account within the list provided by the popup.
+ * This list contains all accounts, as well as a "All" item, allowing the
+ * user to include all accounts within the filter. In case the other controls
+ * for the filter (the filter drawer) enables several account, the popup
+ * automatically adds a "Multiple" item and select it. This item is normally
+ * unavailable and can only be selected programmatically.
+ *
+ * Update mechanism:
+ *	- Content: content is automatically updated when the 'arrangedObjects'
+ * property of the document's array controller for accounts changes.
+ *	- Selection: popup's selection is automatically updated by the controller
+ * which observes the 'selectionIndexes' property of the accounts' array
+ * controller.
+ */
+@implementation QuickAccountFilterPopUpController
+
+
+#pragma mark -
+#pragma mark === Object's life ===
+
+- (id)init {
+	self = [super init];
+	if (self != nil) {
+		containsMultipleItem = NO;
+	}
+	return self;
+}
+
+- (void)awakeFromNib {
+	[accountsArrayController addObserver:self forKeyPath:@"arrangedObjects" options:0 context:nil];
+	[accountsArrayController addObserver:self forKeyPath:@"selectionIndexes" options:0 context:nil];
+}
+
+- (void)removeObservers {
+	[accountsArrayController removeObserver:self forKeyPath:@"arrangedObjects"];
+	[accountsArrayController removeObserver:self forKeyPath:@"selectionIndexes"];
+}
+
+
+#pragma mark -
+#pragma mark === KVO ===
+
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context {
+	NSArray* arrangedAccounts = [accountsArrayController arrangedObjects];
+
+	if ([keyPath isEqualToString:@"arrangedObjects"]) {
+		[self reloadPopUp];
+	}
+	else if ([keyPath isEqualToString:@"selectionIndexes"]) {
+		NSIndexSet* selectionIndexes = [accountsArrayController selectionIndexes];
+		if ([selectionIndexes count] > 1 && [selectionIndexes count] < [arrangedAccounts count]) {
+			if (!containsMultipleItem) {
+				[quickAccountFilterPopUpButton addItemWithTitle:NSLocalizedString(@"quickAccountFilterMultiple", nil)];
+				containsMultipleItem = YES;
+			}
+			[quickAccountFilterPopUpButton selectItemAtIndex:[arrangedAccounts count] + 1];
+		}
+		else {
+			if (containsMultipleItem) {
+				[quickAccountFilterPopUpButton removeItemAtIndex:[arrangedAccounts count] + 1];
+				containsMultipleItem = NO;
+			}
+			if ([selectionIndexes count] == 1) {
+				[quickAccountFilterPopUpButton selectItemAtIndex:[selectionIndexes firstIndex] + 1];
+			}
+			else if ([selectionIndexes count] == [arrangedAccounts count]) {
+				[quickAccountFilterPopUpButton selectItemAtIndex:0];
+			}
+		}
+	}
+}
+
+- (void)reloadPopUp {
+	NSArray* arrangedAccounts = [accountsArrayController arrangedObjects];
+	[quickAccountFilterPopUpButton removeAllItems];
+	[quickAccountFilterPopUpButton addItemWithTitle:NSLocalizedString(@"quickAccountFilterAll", nil)];
+	int i;
+	for (i = 0; i < [arrangedAccounts count]; i++) {
+		[quickAccountFilterPopUpButton addItemWithTitle:[[arrangedAccounts objectAtIndex:i] valueForKey:@"name"]];
+	}
+	
+	if (containsMultipleItem) {
+		[quickAccountFilterPopUpButton addItemWithTitle:NSLocalizedString(@"quickAccountFilterMultiple", nil)];
+	}
+}
+
+#pragma mark -
+#pragma mark === Actions ===
+
+- (IBAction)popUpAction:(id)sender {
+	// Set a variable bind to selection of account instead of directly setting the selection in the account array controller to prevent the notification loopback at selection.
+	int accountsCount = [sender numberOfItems] - 1 - (containsMultipleItem ? 1 : 0);
+	int selectedItemIndex = [sender indexOfSelectedItem];
+	if (!(containsMultipleItem && selectedItemIndex == accountsCount + 1)) {
+		// The "Multiple" item is not selected
+		if (selectedItemIndex == 0) {
+			// All
+			[accountsArrayController setSelectedObjects:[accountsArrayController content]];
+		}
+		else {
+			[accountsArrayController setSelectionIndex:[sender indexOfSelectedItem] - 1];
+		}
+	}
+}
+
+@end

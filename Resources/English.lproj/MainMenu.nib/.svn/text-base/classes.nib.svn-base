@@ -1,0 +1,18 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {customizeToolbar = id; redo = id; toggleToolbar = id; undo = id; }; 
+            CLASS = ApplicationController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                customizeDocumentToolbarMenuItem = NSMenuItem; 
+                redoMenuItem = NSMenuItem; 
+                toggleDocumentToolbarMenuItem = NSMenuItem; 
+                undoMenuItem = NSMenuItem; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}

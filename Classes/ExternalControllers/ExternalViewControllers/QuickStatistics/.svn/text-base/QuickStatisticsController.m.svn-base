@@ -1,0 +1,98 @@
+//
+//  QuickStatisticsController.m
+//  Ges
+//
+//  Created by NeoJF on 22/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import "QuickStatisticsController.h"
+
+
+@implementation QuickStatisticsController
+
+
+#pragma mark -
+#pragma mark === Life cycle ===
+
+/**
+ * Inits the instance.
+ *
+ * Tasks:
+ *	- Programmatically loads the nib file containing the view the instance controls.
+ *	- Adds itself as an observer of filter controller's 'filterPredicate' value. This
+ * is used to reload data of the table view displaying types and their balances when
+ * the filter is updated.
+ */
+- (id)initWithDocument:(MyDocument*)aDocument {
+	self = [super initWithDocument:aDocument];
+	if (self != nil) {
+		[NSBundle loadNibNamed:@"QuickStatistics" owner:self];
+		[[document filterController] addObserver:self forKeyPath:@"filterPredicate" options:nil context:nil];
+	}
+	return self;
+}
+
+
+#pragma mark -
+#pragma mark === Data ===
+
+/**
+ * Returns the balance of filtered operations by retrieving the
+ * array controller for operations of the associated document, and
+ * getting "@sum.value" of arranged objects.
+ */
+- (NSNumber*)balanceOfFilteredOperations {
+	return [[[document operationsArrayController] arrangedObjects] valueForKeyPath:@"@sum.value"];
+}
+
+
+#pragma mark -
+#pragma mark === KVO: management ===
+
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context {
+	if ([keyPath isEqualToString:@"filterPredicate"]) {
+		[typesTableView reloadData];
+	}
+}
+
+
+#pragma mark -
+#pragma mark === Accessors ===
+
+/**
+ * Returns the filter controller of the associated document. This is used
+ * to bind the 'filterPredicate' property of the array controller for operations
+ * of the selected type to the 'statisticsFilterPredicate' property of the filter
+ * controller.
+ */
+- (FilterController*)filterController {
+	return [document filterController];
+}
+
+
+#pragma mark -
+#pragma mark === <NibOwner> ===
+
+/**
+ * Returns an array of all array controllers managing operations in the nib file.
+ * The array contains:
+ *	- 'operationsForSelectedTypeArrayController'.
+ */
+- (NSArray*)operationsArrayControllers {
+	NSArray* array = [NSArray arrayWithObject:operationsForSelectedTypeArrayController];
+	return array;
+}
+
+/**
+ * Returns an array of all array controllers managing types in the nib file.
+ * The array contains:
+ *	- 'typesArrayController'.
+ */
+- (NSArray*)typesArrayControllers {
+	printf("%p\n", typesArrayController);
+	NSArray* array = [NSArray arrayWithObject:typesArrayController];
+	return array;
+}
+
+@end

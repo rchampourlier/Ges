@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Resources/English.lproj/DocumentProperties.nib"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="info.nib"
+   text-time="2007-01-06T13:50:09.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="668781b09c7abd27942fbe536ef320e5"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:09.000000Z"/>
+<entry
+   committed-rev="1"
+   name="keyedobjects.nib"
+   text-time="2007-01-06T13:50:09.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="71a2a11a420abc40ed6babfdddd1f6a0"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:09.000000Z"/>
+<entry
+   committed-rev="1"
+   name="classes.nib"
+   text-time="2007-01-06T13:50:09.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="42991eb66645a55f1086432ea09ab907"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:09.000000Z"/>
+</wc-entries>

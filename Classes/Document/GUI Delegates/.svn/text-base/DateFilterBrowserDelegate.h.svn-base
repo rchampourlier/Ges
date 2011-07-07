@@ -1,0 +1,50 @@
+//
+//  DateFilterBrowserDelegate.h
+//  Ges
+//
+//  Created by NeoJF on 03/10/05.
+//  Copyright 2005 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+
+#import "MyDocument.h"
+#import "FilterController.h"
+
+enum FilterPeriod {P_NONE, P_RELATIVE, P_MONTH, P_TRIMESTER, P_SEMESTER, P_YEAR, P_DAYTODAY};
+enum FilterRelative {R_WEEK, R_MONTH, R_TRIMESTER, R_SEMESTER, R_YEAR};
+enum FilterRelativeChoice {RC_CURRENT, RC_LAST};
+
+static NSString* TAB_ID_DAYTODAY = @"dayToDay";
+static NSString* TAB_ID_PREDEFINED = @"predefined";
+
+@interface DateFilterBrowserDelegate : NSObject {
+	IBOutlet NSBrowser* browser;
+	IBOutlet MyDocument* document;
+	IBOutlet NSArrayController* operationsArrayController;
+	IBOutlet FilterController* filterController;
+	IBOutlet NSTabView* periodFilterTabView;
+	
+	//NSManagedObjectContext* documentManagedObjectContext;
+	
+	/*
+	 * These value are set by the browser:numberOfRowsInColumn method and are used
+	 * by the forecoming calls to browser:willDisplayCell:atRow:column that use
+	 * them to know what should be displayed.
+	 * This may be a little risky, but each time the data should change, the
+	 * browser:numberOfRowsInColumn method should be called before, thus setting
+	 * them to the good value.
+	 */
+	NSCalendarDate* maxDate;
+	NSCalendarDate* minDate;
+	BOOL currentYearShouldBeDisplayed;
+	BOOL firstYearShouldBeDisplayed;
+}
+
+- (int)browser:(NSBrowser *)sender numberOfRowsInColumn:(int)column;
+- (void)browser:(NSBrowser *)sender willDisplayCell:(id)cell atRow:(int)row column:(int)column;
+
+- (IBAction)browserAction:(id)sender;
+- (IBAction)datePickerAction:(id)sender;
+
+@end

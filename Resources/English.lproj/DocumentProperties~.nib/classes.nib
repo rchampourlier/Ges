@@ -1,0 +1,86 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {
+                addAccount = id; 
+                addMode = id; 
+                addPost = id; 
+                addType = id; 
+                closeProperties = id; 
+                delete = id; 
+                removeAccount = id; 
+                removeMode = id; 
+                removePostOrType = id; 
+            }; 
+            CLASS = DocumentPropertiesController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = RChArrayController; 
+                accountsTableView = NSTableView; 
+                modesArrayController = RChArrayController; 
+                modesAvailableForSelectedAccountArrayController = RChArrayController; 
+                modesTableView = NSTableView; 
+                operationsArrayController = RChArrayController; 
+                postsArrayController = RChArrayController; 
+                postsTreeController = NSTreeController; 
+                postsTypesOutlineView = NSOutlineView; 
+                propertiesTableView = NSTableView; 
+                typesArrayController = RChArrayController; 
+            }; 
+            SUPERCLASS = ExternalWindowController; 
+        }, 
+        {
+            CLASS = ExternalViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {view = NSView; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = ExternalWindowController; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {"" = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
+                accountsModesAssociationModesTableViewClicked = id; 
+                modesTableViewClicked = id; 
+            }; 
+            CLASS = PropertiesEntitiesTableController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsArrayController = NSArrayController; 
+                accountsModesAssociationModesTableView = NSTableView; 
+                accountsTableView = NSTableView; 
+                documentPropertiesController = DocumentPropertiesController; 
+                modesArrayController = NSArrayController; 
+                modesTableView = NSTableView; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = PropertiesPostsTypesOutlineViewDragAndDropController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                documentPropertiesController = DocumentPropertiesController; 
+                postsTypesOutlineView = NSOutlineView; 
+                postsTypesTreeController = NSTreeController; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = PropertiesTableViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {propertiesTabView = NSTabView; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = RChArrayController; LANGUAGE = ObjC; SUPERCLASS = NSArrayController; }, 
+        {CLASS = SortDescriptorsController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}

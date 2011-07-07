@@ -1,0 +1,30 @@
+//
+//  MainTabViewDelegate.h
+//  Ges
+//
+//  Created by NeoJF on 23/05/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+
+#import "NibViewController.h"
+
+@class MyDocument;
+@class QuickStatisticsController;
+
+@interface MainTabViewDelegate : NSObject {
+	IBOutlet MyDocument*			document;
+	id <NibViewController>			quickStatisticsController;
+}
+
+// Life cycle
+- (id)init;
+
+// Delegate methods
+- (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem;
+
+// Accessors
+- (id <NibViewController>)quickStatisticsController;
+
+@end

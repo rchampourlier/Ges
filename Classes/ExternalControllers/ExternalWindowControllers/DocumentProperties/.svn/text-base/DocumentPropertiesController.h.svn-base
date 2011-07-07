@@ -1,0 +1,113 @@
+//
+//  DocumentPropertiesController.h
+//  Ges
+//
+//  Created by NeoJF on 15/10/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+
+#import "DocumentPropertiesConstants.h"
+#import "ModelConstants.h"
+
+#import "ExternalWindowController.h"
+#import "QuickAccountFilterPopUpController.h"
+#import "RChArrayController.h"
+
+
+// Constants
+static NSString* alertContextInfoDeletingAccountConfirmation	= @"alertDeletingAccountConfirmation";
+static NSString* AlertContextInfoDeletingModeConfirmation		= @"alertDeletingModeConfirmation";
+static NSString* AlertContextInfoDeletingTypeConfirmation		= @"alertDeletingTypeConfirmation";
+static NSString* alertContextInfoRemovingValueDatesConfirmation	= @"alertRemovingValueDatesConfirmation";
+
+
+@interface DocumentPropertiesController : ExternalWindowController {
+	
+	// Array controllers
+	IBOutlet RChArrayController* accountsArrayController;
+	IBOutlet RChArrayController* modesArrayController;
+	IBOutlet RChArrayController* modesAvailableForSelectedAccountArrayController;
+	IBOutlet RChArrayController* operationsArrayController;
+	IBOutlet RChArrayController* typesArrayController;
+	
+	// GUI components
+	IBOutlet NSTableView*	accountsTableView;
+	IBOutlet NSTableView*	modesTableView;
+	IBOutlet NSTableView*	propertiesTableView;
+	IBOutlet NSOutlineView*	postsTypesOutlineView;
+	
+	// Internal variables
+	int newAccountsCounter;
+	int newModesCounter;
+	int newTypesCounter;	
+}
+
+
+/*
+ * Life cycle
+ */
+- (id)init;
+- (void)awakeFromNib;
+
+
+/*
+ * Window management
+ */
+- (void)openWindow;
+- (void)closeWindow;
+- (IBAction)closeProperties:(id)sender;
+
+
+/*
+ * Accessors
+ */
+- (NSManagedObjectContext*)managedObjectContext;
+- (RChArrayController*)accountsArrayController;
+- (RChArrayController*)modesArrayController;
+- (RChArrayController*)typesArrayController;
+
+
+/*
+ * Other
+ */
+- (NSManagedObject*)selectedAccount;
+
+
+/*
+ * Data
+ */
+
+// IBActions
+- (IBAction)addAccount:(id)sender;
+- (IBAction)removeAccount:(id)sender;
+- (IBAction)addMode:(id)sender;
+- (IBAction)removeMode:(id)sender;
+- (IBAction)addPost:(id)sender;
+- (IBAction)removePostOrType:(id)sender;
+- (IBAction)addType:(id)sender;
+- (IBAction)removeType:(id)sender;
+
+// Other
+- (void)removeAccount;
+- (void)removeMode;
+- (void)removePost;
+- (void)removeType;
+
+
+/*
+ * Responder chain IBActions
+ */
+- (IBAction)delete:(id)sender;
+
+
+/*
+ * <NibOwner>
+ */
+- (NSArray*)accountsArrayControllers;
+- (NSArray*)modesArrayControllers;
+- (NSArray*)operationsArrayControllers;
+- (NSArray*)typesArrayControllers;
+
+@end

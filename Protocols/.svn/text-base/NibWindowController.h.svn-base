@@ -1,0 +1,14 @@
+#import "NibOwner.h"
+
+@class MyDocument;
+
+@protocol NibWindowController <NibOwner>
+
+// Life cycle
+- (id)initWithDocument:(MyDocument*)aDocument;
+
+// Managed window
+- (void)openWindow;
+- (void)closeWindow;
+
+@end

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Resources/English.lproj/QuickStatistics~.nib"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="info.nib"
+   text-time="2007-01-06T13:50:09.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="8d6d6810dab481c0a7eb3a2ebbf94706"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:09.000000Z"/>
+<entry
+   committed-rev="1"
+   name="keyedobjects.nib"
+   text-time="2007-01-06T13:50:09.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="e552753310f7c16fd5769bedb91bcddd"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:09.000000Z"/>
+<entry
+   committed-rev="1"
+   name="classes.nib"
+   text-time="2007-01-06T13:50:09.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="57e409fcec23600ca727e1236a02cd70"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:09.000000Z"/>
+</wc-entries>

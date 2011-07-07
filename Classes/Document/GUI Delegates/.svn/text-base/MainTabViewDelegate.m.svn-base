@@ -1,0 +1,49 @@
+//
+//  MainTabViewDelegate.m
+//  Ges
+//
+//  Created by NeoJF on 23/05/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import "MainTabViewDelegate.h"
+
+
+@implementation MainTabViewDelegate
+
+/**
+ * Overriden init method.
+ */
+- (id)init {
+	self = [super init];
+	if (self != nil) {
+		quickStatisticsController = nil;
+	}
+	return self;
+}
+
+/**
+ * Called when a tab view for which self is delegate is about to select
+ * a tab view.
+ *
+ * Currently connected to the main tab view, it allows loading and displaying
+ * other tab view than the "Edition" one which is the only one included in the
+ * "MyDocument" nib file.
+ */
+- (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem {
+	if ([[tabViewItem identifier] isEqualToString:@"quickStatistics"]) {
+		if (quickStatisticsController == nil) {
+			quickStatisticsController = [[QuickStatisticsController alloc] initWithDocument:document];
+			[tabViewItem setView:[quickStatisticsController view]];
+		}
+	}
+}
+
+/**
+ * Returns the controller for the quick statistics view.
+ */
+- (id <NibViewController>)quickStatisticsController {
+	return quickStatisticsController;
+}
+
+@end

@@ -1,0 +1,127 @@
+//
+//  FilterController.h
+//  Ges
+//
+//  Created by NeoJF on 06/10/05.
+//  Copyright 2005 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+#import "ModelConstants.h"
+
+@interface FilterController : NSObject {
+	
+	/*
+	 * IBOutlets
+	 */
+	
+	// Controls
+	IBOutlet NSDatePicker*			startDatePicker;
+	IBOutlet NSDatePicker*			endDatePicker;
+	IBOutlet NSPopUpButton*			categoryTypePopUpButton;
+	IBOutlet NSPopUpButton*			dateTypePopUpButton;
+	IBOutlet NSTabView*				categoryTabView;
+	IBOutlet NSTabView*				dateTabView;
+	
+	// Array controllers
+	IBOutlet NSArrayController*		accountsArrayController;
+	IBOutlet NSArrayController*		operationModesArrayController;
+	IBOutlet NSArrayController*		operationTypesArrayController;
+	
+	// Dependences
+	IBOutlet id						browserDelegate;
+	
+	
+	/*
+	 * Internal data
+	 */
+	BOOL		periodFilterEnabled;
+	int			pointedState;
+	NSDate*		startDate;
+	NSDate*		endDate;
+	
+	
+	/*
+	 * Predicates
+	 */
+	
+	// Search field predicates
+	NSPredicate*	searchTextPredicate;
+	
+	// Subpredicates
+	NSPredicate*	accountsFilterPredicate;
+	NSPredicate*	markedStatePredicate;
+	NSPredicate*	operationModesFilterPredicate;
+	NSPredicate*	operationTypesFilterPredicate;
+	NSPredicate*	periodFilterPredicate;
+	NSPredicate*	typeForStatsPredicate;
+	NSPredicate*	pointedStatePredicate;
+	
+	// Main predicates
+	NSPredicate*	filterPredicate;
+	NSPredicate*	statisticsFilterPredicate;
+	
+	/*
+	 * Bound properties
+	 */
+	BOOL		markedState;
+}
+
+
+/*
+ * Life cycle
+ */
+- (id)init;
+- (void)awakeFromNib;
+- (void)dealloc;
+
+
+/*
+ * IBActions
+ */
+- (IBAction)categoryTypePopUpButtonAction:(id)sender;
+- (IBAction)dateTypePopUpButtonAction:(id)sender;
+- (IBAction)categorySelectAllButton:(id)sender;
+- (IBAction)categorySelectNoneButton:(id)sender;
+
+
+/*
+ * KVO & KVC
+ */
+
+// KVO: management
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(id)context;
+- (void)addObservers;
+- (void)removeObservers;
+
+// KVO: read accessors
+- (BOOL)isPeriodFilterEnabled;
+- (BOOL)markedState;
+- (int)pointedState;
+- (NSDate*)endDate;
+- (NSDate*)startDate;
+- (NSPredicate*)filterPredicate;
+- (NSPredicate*)searchTextPredicate;
+- (NSPredicate*)statisticsFilterPredicate;
+
+// KVC: write accessors
+- (void)setMarkedState:(BOOL)state;
+- (void)setPeriodFilterEnabled:(BOOL)value;
+- (void)setPointedState:(int)state;
+- (void)setEndDate:(NSDate*)aDate;
+- (void)setStartDate:(NSDate*)aDate;
+- (void)setSearchTextPredicate:(NSPredicate*)predicate;
+
+/*
+ * Predicates construction
+ */
+- (void)rebuildPredicates;
+- (void)rebuildFilterPredicate;
+- (void)rebuildStatisticsFilterPredicate;
+
+/*
+ * External requests
+ */
+- (BOOL)managedObjectAcceptedByFilter:(NSManagedObject*)object;
+
+@end

@@ -1,0 +1,16 @@
+//
+//  ArrayContentFilterPredicate.h
+//  Ges
+//
+//  Created by NeoJF on 21/10/05.
+//  Copyright 2005 __MyCompanyName__. All rights reserved.
+//
+
+#import <Cocoa/Cocoa.h>
+
+
+@interface ArrayContentFilterPredicate : NSPredicate {
+
+}
+
+@end

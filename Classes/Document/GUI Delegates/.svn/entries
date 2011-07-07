@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2007-01-05T21:27:55.579977Z"
+   url="http://192.168.0.6/svn/Ges/Classes/Nib%20Owners/Document/GUI%20Delegates"
+   last-author="roch"
+   kind="dir"
+   uuid="a78307bf-5126-0410-8417-8d442b4cfb11"
+   revision="1"/>
+<entry
+   committed-rev="1"
+   name="MainTabViewDelegate.h"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="e28f7ddf58b0eb886a923058399a2e53"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+<entry
+   committed-rev="1"
+   name="DateFilterBrowserDelegate.h"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="1d0ce1fa714539eec96593da32157af7"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+<entry
+   committed-rev="1"
+   name="MainTabViewDelegate.m"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="67aefdb2cf6d2b815e3ad987c7069e50"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+<entry
+   committed-rev="1"
+   name="DateFilterBrowserDelegate.m"
+   text-time="2007-01-06T13:50:13.000000Z"
+   committed-date="2007-01-05T21:27:55.579977Z"
+   checksum="95038ce786f605fc072e02e393e9e546"
+   last-author="roch"
+   kind="file"
+   prop-time="2007-01-06T13:50:13.000000Z"/>
+</wc-entries>
